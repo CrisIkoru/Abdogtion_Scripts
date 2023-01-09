@@ -1,0 +1,119 @@
+#Basic Autosave v1.1
+#----------#
+#Features: Autosaves to the first slot every time the map changes. Can't
+#           get any simpler then that!
+#          Comes with option to rename first slot to whatever you want.
+#
+#Usage:    Plug and play.
+#
+#----------#
+#-- Script by: V.M of D.T
+#
+#- Questions or comments can be:
+#    given by email: sumptuaryspade@live.ca
+#    provided on facebook: http://www.facebook.com/DaimoniousTailsGames
+#   All my other scripts and projects can be found here: http://daimonioustails.weebly.com/
+#
+#- Free to use in any project with credit given, donations always welcome!
+ 
+#Sets whether to rename first file to denote Autosaveness and what to name it
+NAME_AUTOSAVE_FILE = true
+AUTOSAVE_FILE_NAME_en = "Auto"
+AUTOSAVE_ON_MAP = true
+AUTOSAVE_AFTER_BATTLE = false
+ 
+$auto_save = true
+ 
+class Scene_Map
+  alias auto_post_transfer post_transfer
+  def post_transfer
+    auto_post_transfer
+    return unless AUTOSAVE_ON_MAP
+    if Module.const_defined?(:Game_Options)
+      DataManager.save_game(0) if $game_options.auto_save
+    else
+      DataManager.save_game(0) if $auto_save
+    end
+  end
+end
+ 
+module BattleManager
+  def self.battle_end(result)
+    @phase = nil
+    @event_proc.call(result) if @event_proc
+    $game_party.on_battle_end
+    $game_troop.on_battle_end
+    SceneManager.exit if $BTEST
+    return unless AUTOSAVE_AFTER_BATTLE
+    if Module.const_defined?(:Game_Options)
+      DataManager.save_game(0) if $game_options.auto_save
+    else
+      DataManager.save_game(0) if $auto_save
+    end
+  end
+end
+ 
+class Window_SaveFile
+  alias auto_refresh refresh
+  def refresh
+    if NAME_AUTOSAVE_FILE
+      contents.clear
+      change_color(normal_color)
+      if @file_index == 0 
+          name = AUTOSAVE_FILE_NAME_en
+      else
+        if $game_settings["sys_lang"] == "en"
+        name = Vocab::FileEN + " #{@file_index}"
+        elsif $game_settings["sys_lang"] == "es"
+        name = Vocab::FileES + " #{@file_index}"
+        elsif $game_settings["sys_lang"] == "ru"
+        name = Vocab::File_RU_ + " #{@file_index}"
+      end
+    end
+      draw_text(4, 0, 200, line_height, name)
+      @name_width = text_size(name).width
+      draw_party_characters(152, 58)
+      draw_playtime(0, contents.height - line_height, contents.width - 4, 2)
+    else
+      auto_refresh
+    end
+  end
+end
+
+class Window_FileList
+  def draw_item(index)
+    header = DataManager.load_header(index)
+    enabled = !header.nil?
+    rect = item_rect(index)
+    rect.width -= 4
+    draw_icon(save_icon?(header), rect.x, rect.y, enabled)
+    change_color(normal_color, enabled)
+    if index == 0
+      text = AUTOSAVE_FILE_NAME
+    else
+      text = sprintf(YEA::SAVE::SLOT_NAME, (index + 1).group)
+    end
+    draw_text(rect.x+24, rect.y, rect.width-24, line_height, text)
+  end
+end
+
+#PAAATTTCCCH for KHAS and Auto-Save
+module DataManager
+  def self.save_game_without_rescue(index)
+    File.open(make_filename(index), "wb") do |file|
+      $game_system.on_before_save
+      scene = SceneManager.scene
+      scene.dispose_lights if scene.is_a?(Scene_Map)
+      Marshal.dump(make_save_header, file)
+      Marshal.dump(make_save_contents, file)
+      scene.setup_lights if scene.is_a?(Scene_Map)
+      @last_savefile_index = index
+    end
+    return true
+  end
+end
+
+class Scene_Map
+  def dispose_lights; @spriteset.dispose_lights; end
+  def setup_lights; @spriteset.setup_lights; end
+end
