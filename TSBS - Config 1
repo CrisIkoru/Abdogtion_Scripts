@@ -1,0 +1,183 @@
+# =============================================================================
+# Theolized Sideview Battle System (TSBS)
+# Version : 1.4ob1 (Open Beta)
+# Language : English
+#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+# Contact :
+#------------------------------------------------------------------------------
+# *> http://www.rpgmakerid.com
+# *> http://www.rpgmakervxace.net
+# *> http://theolized.blogspot.com
+#==============================================================================
+# Last updated : 2014.10.21
+# -----------------------------------------------------------------------------
+# Requires : Theo - Basic Modules v1.5b
+# >> Basic Functions 
+# >> Movement    
+# >> Core Result
+# >> Core Fade
+# >> Clone Image
+# >> Rotate Image
+# >> Smooth Movement
+# =============================================================================
+# Terms of Use :
+# -----------------------------------------------------------------------------
+# Credit gw, TheoAllen. Kalo semisal u bisa ngedit2 script gw trus jadi lebih
+# keren, terserah. Ane bebasin. Asal ngga ngeklaim aja. Kalo semisal mau
+# dipake buat komersil, jangan lupa, gw dibagi gratisannya.
+# =============================================================================
+module TSBS 
+  # ===========================================================================
+    MaxRow = 4
+    MaxCol = 3
+  # ---------------------------------------------------------------------------
+  # Setting ukuran rasio spriteset.
+  # MaxRow untuk baris kebawah
+  # MaxCol untuk kolom ke samping.
+  #
+  # Jika kamu memasukkkan MaxRow = 4 dan MaxCol = 3, maka rasio gambar untuk
+  # spriteset harus 3 x 4
+  # ===========================================================================
+    
+  # ===========================================================================
+    Enemy_Default_Flip = false
+  # ---------------------------------------------------------------------------
+  # Terkadang dalam spriteset gambar enemy menghadap ke kiri. Namun disaat
+  # battle, diharuskan hadap ke kanan. Untuk mencegah glitch, kamu bisa set
+  # settingan ini ke true
+  # ===========================================================================
+  
+  # ===========================================================================
+    ActorPos = [ # <--- jangan disentuh
+  # ---------------------------------------------------------------------------
+      #[164,210],
+      [164,210],
+      [230,264],
+      [158,266],
+      [533,305],
+      
+    # Tambahin disini
+    ] # <-- jangan disentuh
+    
+    ActorPos2 = [ # <--- jangan disentuh
+  # ---------------------------------------------------------------------------
+      [230,264],
+      [230,264],
+      [158,266],
+      [533,305],
+      
+    # Tambahin disini
+    ] # <-- jangan disentuh
+  # ---------------------------------------------------------------------------
+  # Posisi actor dalam koordinat [x,y]. Jumlah maksimal battle member juga
+  # bergantung sebanyak berapa kamu memasukkan settingan koordinat.
+  # ===========================================================================
+  
+  # ===========================================================================
+    TotalHit_Vocab = "Golpes"            # Info 1
+    TotalHit_Color = Color.new(255,255,255)  # Info 2
+    TotalHit_Pos   = [[35,10],[150,43]]     # Info 3
+    TotalHit_Size  = 24                     # Info 4
+  # ---------------------------------------------------------------------------
+  # Setting untuk penampilan hit counter. Untuk keterangan bisa dilihat
+  # dibawah sini :
+  #
+  # Info 1 :
+  # Untuk menampilkan teks total hit
+  # 
+  # Info 2 :
+  # Untuk warna tulisan teks tersebut. Harus diisi dengan format 
+  # Color.new(red, green, blue). Masing-masing nilai maksimalnya adalah 255
+  #
+  # Info 3 : 
+  # Untuk koordinat penempatan teks total hit. Formatnya sebagai berikut ini :
+  # Data koordinat disimpan dalam 'nested array' dimana [x,y] pertama adalah
+  # untuk koordinat teks. Dan [x,y] kedua untuk koordinat angka
+  # ===========================================================================
+  
+  # ===========================================================================
+    TotalDamage_Vocab = " "                # Info 1
+    TotalDamage_Color = Color.new(255,255,255)  # Info 2
+    TotalDamage_Pos   = [[65,10],[150,73]]      # Info 3
+    TotalDamage_Size  = 24                      # Info 4
+  # ---------------------------------------------------------------------------
+  # Setting untuk penampilan damage counter. Untuk keterangan bisa dilihat
+  # dibawah sini :
+  #
+  # Info 1 :
+  # Untuk menampilkan teks total damage
+  # 
+  # Info 2 :
+  # Untuk warna tulisan teks tersebut. Harus diisi dengan format 
+  # Color.new(red, green, blue). Masing-masing nilai maksimalnya adalah 255
+  #
+  # Info 3 : 
+  # Untuk koordinat penempatan teks total damage. Format sebagai berikut ini :
+  # Data koordinat disimpan dalam 'nested array' dimana [x,y] pertama adalah
+  # untuk koordinat teks. Dan [x,y] kedua untuk koordinat angka.
+  #
+  # Well, intinya sama kek atasnya :v
+  # ===========================================================================
+  
+  # ===========================================================================
+    Critical_Rate = 0.25
+  # ---------------------------------------------------------------------------
+  # Rate untuk menentukan actor dalam kritikal. Jika kamu tulis 0.25 maka
+  # artinya jika HP dibawah 25% maka actor akan dianggap dalam keadaan kritis
+  # ===========================================================================
+  
+  # ===========================================================================
+    Focus_BGColor = Color.new(0,0,0,170)
+  # ---------------------------------------------------------------------------
+  # Default color untuk mode :focus pada action sequence. Isikan dengan format
+  # --> Color.new(red, green, blue, alpha)
+  # Dimana masing-masing nilai maksimalnya adalah 255
+  # ===========================================================================
+  
+  # ---------------------------------------------------------------------------
+  #                           Setting Lain-lain
+  # ---------------------------------------------------------------------------
+  
+  # ===========================================================================
+    CounterAttack = "Counterattacked!"
+  # Nampilin teks "Counterattacked!" jika battler melakukan serangan balik
+  
+    Magic_Reflect = "Magic Reflected!"
+  # Nampilin teks "Magic Reflected!" jika sihir dibalikin
+  
+    Covered = "Covered!"
+  # Nampilin teks "Covered!" jika battler sedang dilindungi
+  
+    UseShadow = true
+  # Gunain shadow buat battler?
+  
+    KeepCountingDamage = true
+  # Terus hitung damage walo dah K.O (disarankan : true)
+  
+    AutoImmortal = true
+  # Tandai semua battlers sebagai immortal saat melakukan aksi. Disarankan
+  # kamu mengesetnya true jika kamu make YEA Battle Engine
+  
+    Looping_Background = true
+  # Set gambar latar sebagai gambar looping / berulang. Disarankan true
+    
+    PlaySystemSound = false
+  # Saat target dikenai skill / item, secara otomatis akan play sound. Contoh,
+  # jika target evade, maka system akan membunyikan evasion yang ada di dalam
+  # system > database secara otomatis
+  
+    UseDamageCounter = true
+  # Tampilkan damage counter?
+  
+    Reflect_Guard = 121
+  # Animasi yang akan dijalankan pada target jika target ngereflek sihir
+  
+    TimedHit_Anim = 190
+  # Animation ID untuk timed-hit
+  # ===========================================================================
+end
+# =============================================================================
+#
+#                             END OF GENERAL CONFIG
+#
+# =============================================================================
