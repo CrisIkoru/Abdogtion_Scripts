@@ -1,0 +1,2370 @@
+# =============================================================================
+# Theolized Sideview Battle System (TSBS)
+# Version : 1.4ob1 (Open Beta)
+# Language : Informal Indonesian
+#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+# Contact :
+#------------------------------------------------------------------------------
+# *> http://www.rpgmakerid.com
+# *> http://www.rpgmakervxace.net
+# *> http://theolized.blogspot.com
+#==============================================================================
+# Last updated : 2014.10.21
+# -----------------------------------------------------------------------------
+# Requires : Theo - Basic Modules v1.5b or more
+# >> Basic Functions 
+# >> Movement    
+# >> Core Result
+# >> Core Fade
+# >> Clone Image
+# >> Rotate Image
+# >> Smooth Movement
+# =============================================================================
+# Terms of Use :
+# -----------------------------------------------------------------------------
+# Credit gw, TheoAllen. Kalo semisal u bisa ngedit2 script gw trus jadi lebih
+# keren, terserah. Ane bebasin. Asal ngga ngeklaim aja. Kalo semisal mau
+# dipake buat komersil, jangan lupa, gw dibagi gratisannya.
+# =============================================================================
+module TSBS
+# =============================================================================
+#                             SHOW ACTOR ICON
+# =============================================================================
+%Q{
+
+  Bagian pertama : Show icon
+  
+  Disini adalah tempat mendefinisikan icon-icon yang akan ditampilkan pada saat
+  dilakukan action sequence saat battle. Seperti saat actor mengayunkan senjata
+  atau semacamnya. Kamu bisa menambahkan sebanyak-banyaknya. Dengan syarat
+  kamu harus mengikuti format seperti ini
+  
+  "key" => [origin, x, y, z, start, end, dur, index, (flip?, sx, sy, dur)]
+  
+  Penjelasan :
+  - "key"  >> Text yang nantinya akan dipakai buat pemanggilan. Setiap sequence
+              icon harus mempunyai key yang berbeda
+  - origin >> Letak titik pusat dari icon. Terdapat 5 macam titik pusat. Yaitu
+              [0: ditengah] [1: Kiri-atas] [2: Kanan-atas] [3: Kiri-bawah]
+              [4: Kanan-bawah]
+  - x      >> Jarak koordinat X awal dari pusat battler
+  - y      >> Jarak koordinat Y awal dari pusat battler
+  - z      >> Apakah icon akan berada pada atas battler? (true/false)
+  - start  >> Sudut permulaan icon sebelum dirotasi
+  - end    >> Sudut target untuk berakhirnya rotasi
+  - dur    >> Durasi lamanya berputar dalam satuan frame (60 frame = 1 detik)
+  - index  >> Icon index. Tulis -1 jika kamu ingin menampilkan weapon icon
+              dari actor. -2 jika kamu ingin menampilkan weapon kedua. 
+              
+              Kamu juga bisa mengisinya dengan text/string yang nantinya bisa
+              itu akan dievaluasi sebagai script. Contoh:
+              "actor.weapons[0].icon_index"
+              
+              Jika kamu ingin menampilkan icon berdasar gambar seperti yang
+              sudah wa jelasin di instruction bagian weapon notetag, kamu bisa
+              menginputkan -3. Dan inputkan -4 untuk senjata kedua
+              
+  OPTIONAL :
+  - flip?  >> Apakah iconnya akan diflip? Isi kan true / false (atau kosongin)
+  - sx     >> Perpindahan posisi koordinat X dari posisi X awal
+  - sy     >> Perpindahan posisi koordinat Y dari posisi Y awal
+  - dur    >> Durasi lama perpindahan
+  
+  Note :
+  Untuk kegunaan icon sendiri akan terlihat pada action sequence pada bagian
+  ketiga settingan ini
+  
+}
+# =============================================================================
+# Disini kalan akan menyetting sequence icon yang akan ditampilkan
+# =============================================================================
+  Icons = {
+  # "Key"   => [origin, x,    y,      z, start, end, dur, index],
+    "Swing" => [4,     -9,  -12,   true,   -60,  70,   6,    -3],
+    "Clear" => [4,      0,    0,  false,     0,   0,   0,     0],
+    
+  # Tambahin sendiri kalo perlu
+  
+  } # <-- Jangan disentuh!
+# =============================================================================
+#                             DEFAULT SEQUENCES
+# =============================================================================
+%Q{
+
+   Bagian kedua : Default sequence
+  
+  Disini kalian bisa mendefinisikan sequence default untuk setiap gerakan dari
+  battler. Sangat berguna untuk kalian yang malas dan tidak mau memenuhi note
+  di database dengan tag <sideview> beserta isi di dalamnya (kayak gw).
+  
+  Contoh :
+  Jika kamu sudah mendefinisikan Default_Idle = "IDLE"
+  Maka kamu tidak perlu menggunakan tag
+  
+  <sideview>
+  idle : IDLE
+  </sideview>
+  
+  Karena setiap battler yang ada akan menggunakan sequence yang sama. Dengan
+  catatan, kalian harus mempunyai format gambar battler yang sama. Seperti
+  battler_1 baris pertama adalah untuk idle agar tidak terjadi kejanggalan
+  
+  Sequence key bisa dilihat dan dibikin di bagian setelah ini
+
+}
+# =============================================================================
+# Disini kalian akan menyetting default sequence untuk setiap gerakan
+# =============================================================================
+  Default_Idle      = "K-idle"    # Untuk gerakan idle / standby
+  Default_Critical  = "K-pinch"   # Untuk gerakan saat kritis
+  Default_Evade_A   = "K-evade"   # Untuk gerakan menghindar serangan (aktor)
+  Default_Evade_E   = "E-evade"   # Untuk gerakan menghindar serangan (musuh)
+  Default_Hurt      = "K-hurt"    # Untuk gerakan saat terkena serangan
+  Default_Return    = "RESET"     # Untuk gerakan kembali ke tempat semula
+  Default_Dead      = "K-dead"    # Untuk gerakan saat K.O
+  Default_Victory   = "K-victory" # Untuk gerakan saat menang
+  Default_Escape    = "ESCAPE"    # Untuk gerakan saat kabur
+  Default_Intro     = "K-start"          # Untuk gerakan saat masuk battle
+  Default_ACounter  = "Sol_Counter" # Counter attack untuk actor
+  Default_ECounter  = "Opponent_counter"    # Counter attack untuk enemy
+    
+  Default_SkillSequence = ["ATTACK"] # Gerakan default untuk skill
+  Default_ItemSequence  = ["K-Item"] # Gerakan default untuk menggunakan item
+# =============================================================================
+#                             ACTION SEQUENCES
+# =============================================================================
+%Q{
+
+  Bagian ketiga : Action Sequences
+  
+  Disini kalian bisa mendefinisikan gerakan-gerakan battler aktor maupun enemy.
+  Bersiap saja karena instruksinya bakal bejibun. Sejauh ini ada 59 command yang
+  dapat kalian gunakan dalam mengatur sequence. Listnya sebagai berikut :
+  
+  Initial release v1.0
+  
+  1)  :pose             >> Untuk berganti pose
+  2)  :move             >> Untuk bergerak ke koordinat tertentu
+  3)  :slide            >> Untuk bergeser dari koordinat saat ini
+  4)  :goto_oripost     >> Untuk kembali ke pos awal
+  5)  :move_to_target   >> Untuk bergerak ke target
+  6)  :script           >> Untuk menjalankan script
+  7)  :wait             >> Untuk menunggu sebelum ke sequence berikutnya
+  8)  :target_damage    >> Untuk deal damage pada target
+  9)  :show_anim        >> Untuk show animation pada target
+  10) :cast             >> Untuk show aninmation pada user 
+  11) :visible          >> Untuk menentukan visibility 
+  12) :afterimage       >> Untuk menghidupkan / mematikan afterimage
+  13) :flip             >> Untuk membalik battler
+  14) :action           >> Untuk memanggil pre-defined action sequence
+  15) :projectile       >> Untuk melempar projectile
+  16) :proj_setup       >> Untuk menyetting projectile
+  17) :user_damage      >> Untuk damage pada user <DIHILANGKAN!>
+  18) :lock_z           >> Untuk mengunci koordinat Z
+  19) :icon             >> Untuk menampilkan icon
+  20) :sound            >> Untuk membunyikan SE
+  21) :if               >> Untuk kondisi bercabang
+  22) :timed_hit        >> Untuk fungsi timed hit <not-tested>
+  23) :screen           >> Untuk memodifikasi screen
+  24) :add_state        >> Untuk add state pada target
+  25) :rem_state        >> Untuk remove state pada target
+  26) :change_target    >> Untuk mengganti target
+  27) :show_pic         >> Untuk menampilkan picture <DIHILANGKAN!>
+  28) :target_move      >> Untuk menggerakkan target ke koordinat tertentu
+  29) c     >> Untuk menggeser target dari koordinatnya
+  30) :target_reset     >> Untuk mereset target balik ke tempat asalnya
+  31) :blend            >> Untuk mengganti tipe blending pada user
+  32) :focus            >> Untuk menghilangkan battler yang bukan target
+  33) :unfocus          >> Untuk menampilkan kembali semua battler
+  34) :target_lock_z    >> Untuk lock koordinat z dari target
+  
+  Update v1.1
+  35) :anim_top         >> Untuk play animasi selalu didepan layar
+  36) :freeze           >> Untuk ngefreeze semua gerakan selain yg aktif
+  37) :cutin_start      >> Untuk nampilin gambar cutin
+  38) :cutin_fade       >> Untuk memberi efek fadein/fadeout pada cutin
+  39) :cuitn_slide      >> Untuk menggeser gambar cutin
+  40) :target_flip      >> Untuk ngeflip target
+  41) :plane_add        >> Untuk nambahin gambar looping
+  42) :plane_del        >> Untuk ngehapus gambar looping
+  43) :boomerang        >> Untuk memberi efek boomerang pada proyektil
+  44) :proj_afimage     >> Untuk memberi efek afterimage pada proyektil
+  45) :balloon          >> Untuk menampilkan balloon icon pada battler
+  
+  Update v1.2
+  46) :log              >> Untuk menampilkan text di battle log
+  47) :log_clear        >> Untuk menghapus semua isi log window
+  48) :aft_info         >> Untuk mengganti settingan afterimage
+  49) :sm_move          >> Untuk bergerak ke koordinat dengan halus
+  50) :sm_slide         >> Untuk bergeser beberapa pixel dengan halus
+  51) :sm_target        >> Untuk bergerak ke target dengan halus
+  52) :sm_return        >> Untuk kembali ke posisi dengan halus 
+  
+  Update v1.3
+  53) :loop             >> Untuk looping sebanyak n kali
+  54) :while            >> Untuk looping selama kondisi benar
+  55) :collapse         >> Untuk manggil fungsi collapse
+  56) :forced           >> Untuk maksa target buat ganti action key
+  57) :anim_bottom      >> Untuk play animasi di bawah
+  58) :case             >> Untuk kondisi bercabang lebih dari dua
+  59) :instant_reset    >> Untuk mereset posisi battler secara instant
+  60) :anim_follow      >> Untuk membuat animasi mengikuti battler
+  61) :change_skill     >> Untuk mengganti skill agar lebih mudah digunakan
+  
+  Update v1.3b
+  62) :check_collapse   >> Untuk perform collapse pada target
+  63) :reset_counter    >> Untuk mereset damage counter
+  64) :force_hit        >> Untuk membuat skill always hit untuk sementara
+  65) :slow_motion      >> Untuk membuat effect slow motion
+  66) :timestop         >> Untuk menghentikan screen sementara
+  
+  Update v1.3c
+  67) :one_anim         >> Untuk membuat satu animasi untuk area attack
+  68) :proj_scale       >> Untuk menskala damage dari proyektil
+  69) :com_event        >> Untuk memanggil common event saat sequence
+  70) :scr_freeze       >> Untuk membuat screen berhenti diupdate
+  71) :scr_trans        >> Untuk melakukan transisi
+
+  Update v1.4
+  72) :force_evade      >> Untuk membuat target selalu evade
+  73) :force_reflect    >> Untuk membuat target reflek magic
+  74) :force_counter    >> Untuk membuat target selalu counterattack
+  75) :force_critical   >> Untuk membuat serangan critical
+  76) :force_miss       >> Untuk membuat serangan ke target meleset
+  77) :backdrop         >> Untuk mengganti battleback
+  78) :back_trans       >> Untuk menyeting transnsi latar belakang
+  79) :reset_backdrop   >> Untuk mereset balik battleback
+  80) :target_focus     >> Untuk membuat target custom untuk fokus
+  81) :scr_fadeout      >> Untuk membuat Fadeout screen
+  82) :scr_fadein       >> Untuk membuat Fadein screen
+  83) :check_cover      >> Untuk mengecek battler yang akan mengkover (jika ada)
+  84) :stop_move        >> Untuk menghentikan gerakan (jika bergerak)
+  85) :rotate           >> Untuk memutar gambar battler
+  86) :fadein           >> Untuk membuat battler menghilang
+  87) :fadeout          >> Untuk membuat battler muncul kembali
+  88) :immortal         >> Untuk menandai sebagai Immortal sesaat
+  89) :end_action       >> Untuk mengakhiri sequence
+  90) :shadow           >> Untuk membuat shadow visible atawa ngga
+  91) :autopose         >> Untuk membuat pose otomatis
+  92) :icon_file        >> Untuk memanggil show icon dari gambar
+  93) :ignore_flip      >> Untuk mengabaikan dibaliknya koordinat X
+  
+  ===========================================================================
+  *) Membuat action sequence
+  ---------------------------------------------------------------------------
+  Untuk menambahkan sequence, lakukan dengan format seperti ini :
+  
+  "Action Key" => [
+  [loop?, Afterimage?, Flip?], <-- replace dengan true / false (wajib)
+  [:command, param1, param2], <-- jangan lupa komma!
+  [:command, param1, param2],
+  [:command, param1, param2],
+  ....
+  
+  ], <-- komma juga!
+  
+  Keterangan :
+  > loop?
+    Apakah sequence tersebut akan looping? Gunakan true untuk idle, dead, atau 
+    victory pose. Tidak akan bereffect untuk yang lain seperti skill.
+    
+  > Afterimage?
+    Apakah kamu akan menggunakan effect afterimage pada sequence tersebut?
+    Jika true maka action sequence tersebut akan menggunakan afterimage.
+    
+  > Flip?
+    Apakah battler akan diflip / dibalik ? Jika true, maka battler akan 
+    dibalik. Jika false, maka battler akan menghadap sesuai gambar aslinya. 
+    
+    Jika nil / kosong, maka battler akan menyesuaikan nilai flip pada action 
+    sequence sebelumnya. Namun hanya berlaku untuk saat menggunakan skill. 
+    
+    Jika nil / kosong untuk action sequence non-skill, battler akan menyesuaikan
+    posisi flip seperti aslinya (untuk actor, tidak diflip. Untuk enemy,
+    tergantung gimana kamu settingnya. Apa kamu pake tag <flip> ato ngga)
+    
+  > :command
+    Adalah command dari list yang udah wa tulis diatas
+    
+  > param1, param2
+    Adalah parameter dari masing-masing command. Setiap command mempunyai 
+    parameter berbeda. Jadi pastikan kamu baca dengan bener.
+    
+  ===========================================================================
+  1)  :pose   | Mengganti pose battler
+  ---------------------------------------------------------------------------
+  Format --> [:pose, number, cell, wait, (icon)],
+  Format --> [:pose, number, [row, col], wait, (icon)],
+  
+  Keterangan :
+  Command ini adalah untuk mengganti pose battler dari satu cell ke cell lainnya
+  
+  Parameter :
+  number  >> Adalah untuk angka dari nama gambar. Seperti Ralph_1, Ralph_2 
+  cell    >> Adalah cell frame dari spriteset. Semisal kamu menggunakan
+             spriteset 3 x 4, maka dari ujung kiri atas adalah 0 - 11 sampai
+             pada ujung kanan bawah. Kamu juga bisa mengisinya dengan format
+             [baris, kolom] di mana dimulai pojok kanan atas adalah [1,1]
+  wait    >> Untuk menunggu sebelum menuju pose berikutnya dalam hitungan
+             frame
+  icon    >> Icon key yang ditulis diantara kutip ("example"). Icon disini
+             adalah untuk memanggil icon sequence yang ada pada bagian pertama.
+             Jika kamu tidak ingin menampilkan icon, kamu bisa mengkosongkan
+             parameter ini.
+             
+  Contoh :
+  [:pose, 1, 1, 25],
+  [:pose, 1, [1, 2], 25],
+  [:pose, 1, 1, 25, "Swing"],
+  
+  ===========================================================================
+  2)  :move   | Bergerak ke koordinat tertentu
+  ---------------------------------------------------------------------------
+  Format --> [:move, x, y, dur, jump, (height)],
+  
+  Keterangan :
+  Command ini adalah untuk menggerakkan battler dari asalnya menuju koordinat
+  tertentu
+  
+  Parameter :
+  x       >> Posisi x yang akan dituju
+  y       >> Posisi y yang akan dituju
+  dur     >> Durasi perjalanan dalam frame. Makin kecil makin cepet
+  jump    >> Lompatan. Semakin besar semakin tinggi
+  height  >> Lokasi ketinggian. Berhubungan dengan penempatan shadow (opsional)
+  
+  Contoh :
+  [:move, 150, 235, 60, 20],
+  [:move, 150, 235, 60, 20, 235],
+  
+  ===========================================================================
+  3)  :slide   | Bergeser beberapa pixel
+  ---------------------------------------------------------------------------
+  Format --> [:slide, x, y, dur, jump, (height)],
+  
+  Keterangan :
+  Command ini adalah untuk menggeser battler dari asalnya beberapa pixel sesuai
+  dengan parameter yang akan kamu masukkan
+  
+  Parameter :
+  x       >> Perpindahan sumbu x dari koordinat asal
+  y       >> Perpindahan sumbu y dari koordinat asal
+  dur     >> Durasi perjalanan dalam frame. Makin kecil makin cepet
+  jump    >> Lompatan. Semakin besar semakin tinggi
+  height  >> Lokasi ketinggian. Berhubungan dengan penempatan shadow (opsional)
+  
+  Contoh :
+  [:slide, -100, 0, 25, 0],
+  [:slide, -100, -50, 25, 0, 20],
+  
+  Catatan :
+  Jika battler diflip, maka koordinat X juga akan ikut diflip. Dalam artian
+  jika x minus yang pada arti awalnya adalah geser ke kiri, maka akan berubah
+  jadi geser ke kanan
+  
+  ===========================================================================
+  4)  :goto_oripost  | Kembali ke posisi semula
+  ---------------------------------------------------------------------------
+  Format --> [:goto_oripost, dur, jump],
+  
+  Keterangan :
+  Command ini adalah untuk mengembalikan battler kepada posisi semula
+  
+  Parameter
+  dur   >> Durasi perjalanan dalam frame. Makin kecil makin cepet
+  jump  >> Lompatan. Semakin besar semakin tinggi.
+  
+  Contoh :
+  [:goto_oripost, 10, 20],
+  
+  ===========================================================================
+  5)  :move_to_target  | Bergerak relatif menuju target
+  ---------------------------------------------------------------------------
+  Format --> [:move_to_target, x, y, dur, jump, (height)],
+  
+  Keterangan :
+  Command ini adalah untuk menggerakkan battler kepada target yang akan dituju
+  
+  Parameter
+  x       >> Perbedaan sumbu x dari target
+  y       >> Perbedaan sumbu y dari target
+  dur     >> Durasi perjalanan dalam frame. Makin kecil makin cepet
+  jump    >> Lompatan. Semakin besar semakin tinggi
+  height  >> Lokasi ketinggian. Berhubungan dengan penempatan shadow (opsional)
+  
+  Contoh :
+  [:move_to_target, 130, 0, 25, 0],
+  
+  Catatan 1:
+  Jika battler diflip, maka koordinat X juga akan ikut diflip. Dalam artian
+  jika x minus yang pada arti awalnya adalah geser ke kiri, maka akan berubah
+  jadi geser ke kanan
+  
+  Catatan 2:
+  Jika target yang dituju adalah area (target area), maka battler akan bergerak
+  kearah tengah-tengah dari kumpulan target tersebut.
+  
+  ===========================================================================
+  6)  :script   | Menjalankan script call
+  ---------------------------------------------------------------------------
+  Format --> [:script, "script call"]
+  
+  Keterangan :
+  "script call" adalah Konten untuk script call. Harus dibungkus dalam kutip
+  
+  Contoh :
+  [:script, "$game_switches[1] = true"],
+  
+  ===========================================================================
+  7)  :wait   | Timing menunggu dalam frame
+  ---------------------------------------------------------------------------
+  Format --> [:wait, frame],
+  
+  Keterangan :
+  frame adalah angka yang akan digunakan untuk lama penungguan dalam hitungan 
+  frame
+  
+  Contoh :
+  [:wait, 60],
+  
+  ===========================================================================
+  8)  :target_damage   | Applikasi skill / item pada target
+  ---------------------------------------------------------------------------
+  Format --> [:target_damage, (option)],
+  
+  Keterangan :
+  Option adalah opsi untuk memodifikasi skill / item yang akan digunakan.
+  Terdapat 3 mode opsi yang bisa kamu gunakan. Kamu juga bisa mengabaikannya
+  jika dirasa tidak perlu.
+  
+  - Formula
+  Isi skill dengan formula baru. Formula harus dibungkus dalam kutip ("")
+  
+  - Skill ID
+  Kamu bisa mengganti skill dengan cara memberikan angka bulat pada option.
+  
+  - Damage Rate
+  Kamu bisa mengganti damage rate pada skill yang digunakan. Seperti bertambah
+  dua kali lipat, atau menjadi setengahnya dengan cara menambahkan bilangan
+  pecahan / float pada option
+  
+  Contoh :
+  [:target_damage],                            << Default / apa adanya
+  [:target_damage, "a.atk * 10 - b.def * 5"],  << Custom formula
+  [:target_damage, 10],                        << Aplikasi skill lain
+  [:target_damage, 1.5],                       << Skala damage
+  
+  ===========================================================================
+  9)  :show_anim   | Menjalankan animasi pada target
+  ---------------------------------------------------------------------------
+  Format --> [:show_anim, (anim_id), (flip?), (ignore anim guard?)],
+  
+  Keterangan :
+  - Anim_id adalah parameter opsional. Kamu bisa spesifikasi sequence tertentu
+  bakal ngeplay animasi apa. Jika opsi tersebut diabaikan, maka sequence
+  akan menjalankan animasi default pada skill / weapon
+  
+  - Flip adalah apakah animasi tersebut akan dijalankan dengan terbalik secara
+  horizontal? Kamu bisa mengabaikan parameter ini jika tidak perlu
+  
+  - Ignore anim guard adalah untuk mengabaikan animasi anim guard pada state
+  yang dimiliki oleh target
+  
+  Contoh :
+  [:show_anim],
+  [:show_anim, 25],  << menjalankan animasi ID 25
+  [:show_anim,116,false,true],
+  
+  ===========================================================================
+  10) :cast   | Menjalankan animasi pada user
+  ---------------------------------------------------------------------------
+  Format --> [:cast, (anim_id), (flip)],
+  
+  Keterangan :
+  Sama seperti show anim. Namun yang menjadi target adalah user. Jika anim_id
+  diabaikan (nil), animasi yang akan dijalankan adalah animasi dari skill
+  yang digunakan.
+  
+  Flip adalah untuk membalik animasi. Jika true, maka animasi akan dibalik.
+  Nilai defaultnya adalah sama dengan nilai flip pada battler
+  
+  Contoh :
+  [:cast], << menjalankan animasi sesuai dengan
+  [:cast, 25],  << menjalankan animasi ID 25
+  [:cast, 25, true],  << menjalankan animasi ID 25 dengan dibalik
+  
+  ===========================================================================
+  11) :visible   | Mengatur visibility battler
+  ---------------------------------------------------------------------------
+  Format --> [:visible, true/false],
+  
+  Keterangan :
+  Parameter command visible hanya ada satu. Dan itu cukup ditulis dengan true
+  atau false. Jika true, maka battler akan terlihat. False, battler akan
+  hilang
+  
+  Contoh :
+  [:visible, true],
+  [:visible, false],
+  
+  ===========================================================================
+  12) :afterimage   | Menghidupkan effect afterimage
+  ---------------------------------------------------------------------------
+  Format --> [:afterimage, true/false],
+  
+  Keterangan :
+  Parameter command afterimage seperti halnya visible. Hanya berlaku true dan
+  false
+  
+  Contoh :
+  [:afterimage, true],
+  [:afterimage, false],
+  
+  ===========================================================================
+  13) :flip   | Membalik battler sprite secara horizontal
+  ---------------------------------------------------------------------------
+  Format --> [:flip, option],
+  
+  Keterangan :
+  Ada tiga opsi untuk membalik battler sprite. Antara lain
+  >> True     - Untuk dibalik
+  >> False    - Untuk tidak dibalik / mengembalikan ke semula
+  >> :toggle  - Untuk membalik tergantung pada keadaan sprite terakhir
+  >> :ori     - Untuk mereset sesuai nilai value default flip
+  
+  Contoh :
+  [:flip, true],
+  [:flip, false],
+  [:flip, :toggle],
+  [:flip, :ori],
+  
+  ===========================================================================
+  14) :action   | Memanggil pre-defined action
+  ---------------------------------------------------------------------------
+  Format --> [:action, "key"],
+  
+  Keterangan :
+  Command :action adalah untuk menggabung-gabungkan action sequence. Jadi kamu
+  bisa saja membuat sebuah template dan kamu hanya tinggal menggabung antara
+  satu dengan yang lain.
+  
+  Key adalah sequence key dari action sequence yang akan digabungkan
+  Contoh :
+  [:action, "Magic Cast"],
+  [:action, "Firebolt"],
+  
+  ===========================================================================
+  15) :projectile   | Melempar proyektil
+  ---------------------------------------------------------------------------
+  Format --> [:projectile, anim_id, dur, jump, (icon), (angle_speed)],
+  
+  Keterangan :
+  Sama seperti command target damage. Namun dalam bentuk proyektil. Saat
+  proyektil sampai ke pada target, maka target akan terkena damage.
+  
+  Parameternya antara lain :
+  anim_id     >>  ID animasi yang akan diplay pada proyektil.
+  dur         >>  Durasi perjalanan dalam frame.
+  jump        >>  Lompatan.
+  icon        >>  Icon ID, atau string/text yang nanti akan dievauasi sebagai
+                  script
+  angle_speed >>  Kecepatan berputar icon
+  
+  Contoh :
+  [:projectile, 110, 10, 0, 0, 0],
+  [:projectile, 0, 10, 20, 188, 0],
+  [:projectile, 0, 10, 0, 147, 90],
+  [:projectile, 0, 20, 10, "item_in_use.icon_index", 90],
+  
+  ===========================================================================
+  16) :proj_setup   | Menyetting proyektil
+  ---------------------------------------------------------------------------
+  Format --> [:proj_setup, start, end],
+  
+  Keterangan :
+  Command ini untuk menyetting proyektil. Disarankan dipanggil sebelum 
+  :projectile untuk menyetting proyektil yang akan dilempar
+  
+  Start >> asal proyektil dari user
+  End   >> tujuan proyektil (target)
+  
+  Isi Start dan End dengan parameter berikut
+  :head   >> Target pada bagian atas
+  :middle >> Target pada bagian tengah
+  :feet   >> Target pada bagian kaki
+  
+  Contoh :
+  [:proj_setup, :middle, :feet],
+  [:projectile, ....],
+  
+  ############################# Update Versi 1.4 ##############################
+  
+  Format -> [:proj_setup, {}],
+  
+  Di versi yang terbaru, kamu memiliki lebih banyak pilihan untuk mengunakan
+  command ini. Namun kamu juga tetap dapat menggunakan model setting di versi
+  sebelumnya seperti yang diatas. Cara penggunaannya adalah dengan format 
+  berikut.
+  
+  [:proj_setup, {:opsi1 => nilai, :opsi2 => nilai}],
+  [:projectile, ....],
+  
+  Atau dengan seperti ini
+  
+  [:proj_setup, {
+    :opsi1 => nilai,
+    :opsi2 => nilai,
+    :opsi3 => nilai,
+  }],
+  [:projectile, ....],
+  
+  Dimana opsi-opsi itu meliputi diantara lain :
+  
+  #############################################################################
+  PENEMPATAN :
+  >> :start       | Posisi awal proyektil
+  >> :end         | Posisi akhir proyektil
+  >> :start_pos   | Posisi relatif terhadap posisi awal
+  >> :end_pos     | Posisi relatif terhadap posisi akhir
+  ----------------------------------------------------------------------------
+  Keterangan posisi pusat :
+  Untuk menggunakan posisi awal dan akhir proyektil, kamu cukup masukkan
+  nilainya dengan memilih salah satu antara berikut :
+  
+  :head   => Atas sprite / Kepala
+  :middle => Tengah sprite / Badan
+  :feet   => Bawah sprite / kaki
+  :none   => Tidak ada referensi. Tentukan sendiri lewat setting posisi
+  :self   => Referensi titik akhir sama dengan titik awal. Posisi :self 
+             digunakan bersamaan dengan :end_pos. Pilihan ini hanya dapat
+             digunakan di opsi :end
+  Contoh :
+  [:proj_setup, {:start => :middle, :end => :head}],
+  
+  Keterangan posisi relatif :
+  Posisi relatif adalah perpindahan dari titik pusat. Contohnya semisal kamu 
+  ingin membuat titik awal proyektil ada di depan battler.
+  
+  Format parameter
+  :start_pos  => [x, y],
+  :end_pos    => [x, y],
+  
+  Contoh :
+  [:proj_setup,{
+    :start => :middle,
+    :start_pos => [-25, 0],
+  }],
+  
+  [:proj_setup,{
+    :start => :middle,
+    :end => :self,
+    :end_pos => [0, -100],
+  }],
+  
+  ----------------------------------------------------------------------------
+  >> :reverse     | Penempatan dibalik
+  ----------------------------------------------------------------------------
+  Keterangan :
+  Opsi ini adalah untuk membalik penempatan proyektil dimana proyektil akan
+  diluncurkan mulai dari target. Bukan dari subject. Kamu tinggal memasukkan
+  nilai true untuk melakukannya
+  
+  Contoh :
+  [:proj_setup,{
+    :reverse => true,
+  }],
+  
+  #############################################################################
+  SETTING ANIMASI :
+  >> :anim_start  | Jalankan animasi tertentu di titik awal proyektil
+  >> :anim_end    | Jalankan animasi tertentu di titik akhir proyektil
+  ----------------------------------------------------------------------------
+  Keterangan :
+  Opsi ini adalah agar play animasi tertentu di awal atau di akhir proyektil
+  Contoh :
+  [:proj_setup, {
+    :anim_start => 10,
+    :anim_end => 11,
+  }],
+  
+  Setting tersebut akan membuat saat awal kamu melempar proyektil akan 
+  memainkan animasi ID 10 dan di akhir akan memainkan animasi ID 11. Jika kamu
+  ingin ID animasi sama dengan animasi skill, gunakan :default
+  
+  Contoh :
+  [:proj_setup, {
+    :anim_start => 10,
+    :anim_end => :default,
+  }],
+  
+  ----------------------------------------------------------------------------
+  >> :anim_pos    | Posisi animasi proyektil.
+  ----------------------------------------------------------------------------
+  Keterangan :
+  Jika kamu memilih animasi sebagai proyektil yang akan dilempar (seperti bola
+  api). Kamu bisa menentukan animasi tersebut bakal ditampilin selalu diatas,
+  terkadang tertutupi oleh battler, atau selalu tertutupi oleh battler dengan
+  cara memasukkan angkta antara [-1: Belakang], [0:n Normal], [1: Always on top]
+  
+  Contoh :
+  [:proj_setup, {
+    :anim_pos => 1,
+  }],
+  
+  ----------------------------------------------------------------------------
+  >> :anim_hit    | Mainkan animasi hanya jika terkena hit
+  ----------------------------------------------------------------------------
+  Keterangan :
+  Opsi ini adalah untuk membuat animasi hit hanya dijalankan ketika proyektil
+  sukses mengenai target. Nilai defaultnya adalah false
+  
+  Contoh :
+  [:proj_setup, {
+    :anim_hit => true,
+  }],
+  
+  ----------------------------------------------------------------------------
+  >> :flash       | Referensi flash
+  ----------------------------------------------------------------------------
+  Keterangan :
+  Opsi ini adalah untuk mendukung opsi :anim_start dan :anim_end dimana jika
+  kamu menggunakan setting "flash target" yang ada di database animasi, flash
+  akan dialihkan kepada subject / target.
+  
+  Format --> :flash => [subj, target] 
+  ganti dengan true / false
+  
+  Contoh :
+  [:proj_setup, {
+    :anim_start => 10,
+    :anim_end => 11,
+    :flash => [true, true],
+  }],
+  
+  #############################################################################
+  SETTING GERAKAN :
+  >> :pierce      | Jalankan terus begitu terkena target
+  >> :boomerang   | Boomerang. Kembali ke subjek begitu terkena target
+  >> :wait        | Tunggu beberapa frame sebelum bergerak
+  ----------------------------------------------------------------------------
+  Keterangan :
+  Seperti yang sudah dijelaskan di keterangan diatas. :pierce akan membuat
+  proyektil terus bergerak setelah mengenai target. :boomerang untuk membuat
+  proyektil balik. Dan wait adalah untuk membuat proyektil menunggu beberapa
+  frame sebelum dilempar
+  
+  Contoh :
+  [:proj_setup,{
+    :pierce => true,
+    :wait => 25,
+  }],
+  
+  [:proj_setup,{
+    :boomerang => true,
+    :wait => 25,
+  }],
+  
+  #############################################################################
+  SETTING EFEK :
+  >> :aftimg      | Efek afterimage
+  >> :aft_opac    | Pengurangan opacity afterimage per frame
+  >> :aft_rate    | Rasio afterimage
+  ----------------------------------------------------------------------------
+  Keterangan :
+  - Tiga settingan diatas adalah untuk mengatur efek afterimage. :aftimg adalah
+    untuk meng-hidupkan efek afterimage dengan cara memasukkan nilai true.
+  - Sedangkan :aft_opac adalah kecepatan pengurangan opacity dari gambar 
+    afterimage per frame. Jika kamu memasukkan 25 berarti opacity akan dikurangi
+    sebesar 25 per frame.
+  - Sedangkan :aft_rate adalah rasio kloning gambar. Makin kecil nilainya, makin
+    padat gambar afterimagenya. Nilai minimum adalah 1
+  - Aftermage hanya akan terlihat jika kamu menggunakan icon sebagai gambarnya,
+    bukan animasi
+  
+  Contoh :
+  [:proj_setup, {
+    :aftimg => true,
+    :aft_opac => 19,
+    :aft_rate => 1,
+  }],
+  
+  ----------------------------------------------------------------------------
+  >> :angle       | Sudut awal
+  ----------------------------------------------------------------------------
+  Keterangan :
+  Adalah sudut awal dari sebuah proyektil jika kamu mau menggunakan proyektil
+  dari icon. Semisal sudut awalnya adalah 90 derajat
+  
+  [:proj_setup, {
+    :angle => 90,
+  }],
+  
+  #############################################################################
+  SETTING DAMAGE :
+  >> :damage      | Eksekusi damage
+  >> :scale       | Skala damage
+  ----------------------------------------------------------------------------
+  Keterangan :
+  - Setting :damage adalah untuk mengeset bagaimana perilaku damage dari 
+    proyektil tersebut. Masukkan nilai antara -1, 0, atau 1 dimana
+    
+    >> -1: Damage pada awal melempar proyektil
+    >>  0: Proyektil tidak melakukan damage pada target
+    >>  1: Proyektil melakukan damage pada target di akhir
+    Nilai defaultnya adalah 1
+  
+  - Setting :scale adalah skala damage untuk proyektil mirip seperti pada
+    [:target_damage, 0.5]. Angka yang kamu masukkan harus berupa bilangan
+    pecahan.
+    
+  Contoh :
+  [:proj_setup, {
+    :damage => -1,
+    :scale => 0.5,
+  }],
+  
+  #############################################################################
+  MODIFIKASI :
+  >> :change      | Change flag
+  ----------------------------------------------------------------------------
+  Keterangan :
+  Jika kamu menggunakan banyak setup proyektil, maka sebenarnya setiap kali
+  mensetting proyektil baru, settingan akan kembali direset. 
+  
+  Contoh :
+  [:proj_setup, {
+    :start_pos => [-25, 0],
+    :anim_start => 10,
+  }],
+  [:projectile, ...],
+  [:proj_setup, {:start_pos => [0, -25]}],
+  [:projectile, ....],
+  
+  Maka proyektil kedua tidak akan memiliki settingan :anim_start 10 karena
+  settingan proyektil akan direset saat kamu kembali memanggil :proj_setup
+  
+  Untuk menanggulangi itu, kamu harus memasukkan opsi :change seperti berikut
+  [:proj_setup, {
+    :start_pos => [-25, 0],
+    :anim_start => 10,
+  }],
+  [:projectile, ...],
+  [:proj_setup, {
+    :start_pos => [0, -25],
+    :change => true,
+  }],
+  [:projectile, ....],
+  
+  ===========================================================================
+  17) :user_damage   | Damage pada user
+  Di versi 1.4 ini udah ngga ada lagi
+  ---------------------------------------------------------------------------
+  
+  Sebagai gantinya, kamu bisa pake 
+  [:change_target, 11],
+  [:target_damage],
+  
+  ===========================================================================
+  18) :lock_z   | Untuk mengunci koordinat Z
+  ---------------------------------------------------------------------------
+  Format --> [:lock_z, true/false],
+  
+  Keterangan :
+  Koordinat Z adalah koordinat imajiner untuk menentukan sprite mana yang akan
+  ditampilkan pada player lebih dekat. Di dalam TSBS, koordinat Z adalah
+  dinamis. Sprite yang mempunyai koordinat Y paling besar (paling bawah)
+  juga mempunyai Z paling besar. 
+  
+  Jika sebuah sprite bergerak keatas, maka
+  koordinat Z bisa turun. Untuk mencegah hal ini, kamu bisa mengunci koordinat
+  Z untuk beberapa alasan tertentu
+  
+  Koordinat Z juga berpengaruh pada peletakan bayangan battler. Jika kamu lock
+  koordinat Z, maka bayangan battler juga tidak akan bergerak
+  
+  Contoh :
+  [:lock_z, true],
+  [:lock_z, false],
+  
+  ===========================================================================
+  19) :icon   | Menampilkan icon
+  ---------------------------------------------------------------------------
+  Format --> [:icon, "key"],
+  
+  Keterangan :
+  Sama seperti show icon pada command :pose. Hanya saja ini independen tidak
+  tergantung pada command :pose
+  
+  Contoh :
+  [:icon, "Swing"],
+  
+  ===========================================================================
+  20) :sound  | Membunyikan Sound Effect
+  ---------------------------------------------------------------------------
+  Format --> [:sound, name, vol, pitch],
+  
+  Keterangan :
+  Command ini adalah untuk membunyikan sound effect
+  
+  Parameter :
+  name  >> Nama SE yang ada pada folder Audio/SE
+  vol   >> Volume SE yang akan diplay
+  pitch >> Pitch SE yang akan diplay
+  
+  Contoh :
+  [:sound, "absorb", 100, 100],
+  
+  ===========================================================================
+  21) :if | Kondisi Bercabang
+  ---------------------------------------------------------------------------
+  Format --> [:if, script, act_true, (act_false)],
+  
+  Keterangan :
+  Untuk membuat percabangan pada action sequence. Kesalahan menuliskan script
+  call bakal muncul error. Jadi hati-hati ye.
+  
+  ---------------------
+  Parameter :
+  script    >> Adalah String / Text yang akan dibaca sebagai script. Kesalahan
+               menulis kondisi akan berakibat script error
+  Act_true  >> Adalah action key yang akan dijalankan jika true
+  Act_false >> Adalah action key yang akan dijalankan jika false. Bisa 
+               diabaikan jika tidak perlu
+  
+  Contoh :
+  [:if, "$game_switches[1]", "Suppa-Attack"],
+  [:if, "$game_switches[1]", "Suppa-Attack", "Normal-Attack"],
+  
+  --------------------
+  Alternatif :
+  --------------------
+  Jika kamu terlalu malas untuk membikin action sequence baru hanya untuk satu
+  baris sequence, kamu bisa langsung menambahkan array [] di dalam percabangan. 
+  
+  Contoh :
+  [:if, "$game_switches[1]", [:target_damage]],
+  [:if, "$game_switches[1]", [:target_damage], [:user_damage]],
+  
+  --------------------
+  Alternatif lain :
+  --------------------
+  Jika kamu terlalu malas untuk membikin action sequence baru, kamu bisa
+  memasukkan sequence baru ke dalam cabang tanpa harus membuat action key
+  yang baru lagi.
+  
+  Contoh dari gerakan normal attack Soleil (sample game):
+  [:if,"target.result.hit?",
+    [ 
+    [:target_slide, -5, 0, 3, 0],
+    [:slide,-5, 0, 3, 0],
+    ],
+  ], 
+  
+  ===========================================================================
+  22) :timed_hit  | Fungsi timed hit (BETA)
+  ---------------------------------------------------------------------------
+  Format --> [:timed_hit, count, (key), (anim_id)],
+  
+  Keterangan :
+  Terinspirasi dari Eremidia Dungeon. Timed hit adalah fungsi dimana jika
+  player menekan tombol pada waktu tertentu, maka player akan mendapat hadiah.
+  Seperti damage skill akan meningkat dua kali. Tentunya kamu sendiri yang
+  menentukan hadiahnya
+  
+  command ini harus diikuti dengan [:if] dimana parameternya adalah
+  [:if, "@timed_hit"]
+  
+  Parameter :
+  Count adalah timing kesempatan yang diberikan pada player untuk menekan
+  tombol confirm / C dalam hitungan frame.
+  
+  Contoh :
+  [:timed_hit, 60],
+  [:wait, 60],  <-- Kamu bisa ganti ini dengan :pose
+  [:if, "@timed_hit", "Suppa-Attack"],
+  
+  ########################### Update Versi 1.4 ##############################
+  
+  Dalam update versi ke 1.4 sekarang kamu dapat melakukan timed hit yang dengan
+  tombol yang berbeda. Kamu bisa mengecek apakah player menekan :SHIFT, :C
+  atau tombol lain, dengan cara berikut
+  
+  [:timed_hit, 60, :SHIFT] <-- Satu tombol
+  [:timed_hit, 60, [:SHIFT, :C, :B]] <-- Banyak tombol
+  
+  Dan pada pengecekan kondisi bercabang, kamu lakukan dengan memasukkan kondisi
+  "@timed_hit == :SHIFT". Disarankan untuk tombol yang banyak, gunakan :case
+  
+  [:timed_hit, 60, :SHIFT]
+  
+  [:case, {
+    "@timed_hit == :SHIFT" => "Do Something",
+    "@timed_hit == :Z" => "Do Something",
+  }],
+  
+  Nb : Keterangan :case ada di bawah
+  
+  Kamu juga bisa menentukan animasi yang akan di jalankan pada battler saat
+  kamu sukses memencet tombol timed hit dengan cara memasukkan parameter ke
+  tiga dengan ID animasi. 
+  
+  Contoh :
+  [:timed_hit, 10, :C, 10],
+  
+  Saat kamu bisa memencet tombol timed hit dengan tepat, animasi 10 akan 
+  dijalankan.
+  
+  ===========================================================================
+  23) :screen | Modifikasi screen
+  ---------------------------------------------------------------------------
+  Format --> [:screen, submode, param1, param1],
+  
+  Keterangan :
+  Command ini adalah untuk memodifikasi screen. Terdapat submode pada command 
+  screen ini. Yaitu antara lain :
+  
+  :tone       >> Seperti tint screen pada event
+  :shake      >> Seperti shake screen pada event
+  :flash      >> Seperti flash screen pada event
+  :normalize  >> Mengembalikan tint ke semula
+  
+  --------------------------------------------------
+  Parameter (:tone)
+  Format --> [:screen, :tone, tone, dur],
+  - Tone  >> Tone.new(red, green, blue, gray)
+  - dur   >> Durasi pergantian tone dalam frame
+  
+  Contoh :
+  [:screen, :tone, Tone.new(120, 90, 0, 0), 60]
+  
+  --------------------------------------------------
+  Parameter (:shake)
+  Format --> [:screen, :shake, power, speed, dur],
+  - power >> Kekuatan shake atau gesernya
+  - shake >> Kecepatan bergesernya
+  - dur   >> Durasi berapa lama screen bakal dishake
+  
+  Contoh :
+  [:screen, :shake, 5, 10, 60],
+  
+  --------------------------------------------------
+  Parameter (:flash)
+  Format --> [:screen, :flash, color, dur],
+  - color >> Color.new(red, green, blue, alpha)
+  - dur   >> Durasi berapa lama screen ngeflash
+  
+  Contoh :
+  [:screen, :flash, Color.new(255,255,255,128), 60],
+  
+  --------------------------------------------------
+  Parameter (:normalize)
+  Format --> [:screen, :normalize, dur],
+  - dur   >> Durasi untuk kembali ke tint screen semula
+  
+  Contoh :
+  [:screen, :normalize, 60],
+  
+  ===========================================================================
+  24) :add_state  | Untuk add state pada target
+  ---------------------------------------------------------------------------
+  Format --> [:add_state, state_id, (chance), (ignore_rate?)],
+  
+  Keterangan :
+  Seperti namanya. command ini adalah untuk aplikasi state berdasar chance pada
+  target.
+  
+  Parameter :
+  state_id  >> ID state dalam database
+  chance    >> Chance / kesempatan. Tulis antara 1-100 atau 0.0 - 1.0. Jika 
+               kamu kosongkan, maka nilai defaultnya adalah 100
+  ignore_rate >> Untuk mengabaikan state rate pada features. Tulis antara true
+                 atau false. Jika kamu kosongkan, maka defaultnya adalah false
+  
+  Contoh :
+  [:add_state, 10],
+  [:add_state, 10, 50],
+  [:add_state, 10, 50, true],
+  
+  ===========================================================================
+  25) :rem_state  | Untuk remove state pada target
+  ---------------------------------------------------------------------------
+  Format --> [:rem_state, state_id, (chance)],
+  
+  Keterangan :
+  Seperti namanya. command ini adalah untuk menghapus state berdasar chance pada
+  target.
+  
+  Parameter :
+  state_id  >> ID state dalam database
+  chance    >> Chance / kesempatan. Tulis antara 1-100 atau 0.0 - 1.0. Jika 
+               kamu kosongkan, maka nilai defaultnya adalah 100
+  
+  Contoh :
+  [:rem_state, 10],
+  [:rem_state, 10, 50],
+  
+  ===========================================================================
+  26) :change_target  | Untuk mengganti target
+  ---------------------------------------------------------------------------
+  Format --> [:change_target, option],
+  
+  Keterangan :
+  command ini adalah untuk mengganti target di tengah-tengah dijalankannya
+  action sequence. Terdapat sembilan mode target. Antara lain :
+  
+  0   >> Kembali ke target semula (target dari database)
+  1   >> Target all (allies + enemies)
+  2   >> Target all (allies + enemies) except user
+  3   >> All enemies 
+  4   >> All enemies except current target
+  5   >> All allies
+  6   >> All allies except user
+  7   >> Next random enemy
+  8   >> Next random ally
+  9   >> Absolute random target for enemies
+  10  >> Absolute random target for allies
+  11  >> Diri sendiri
+  
+  Contoh :
+  [:change_target, 0],
+  [:change_target, 1],
+  [:change_target, 2],
+  [:change_target, 3],
+  [:change_target, 4],
+  [:change_target, 5],
+  [:change_target, 6],
+  [:change_target, 7],
+  [:change_target, 8],
+  [:change_target, 9,  3],  <-- Tiga absolut random target untuk enemies
+  [:change_target, 10, 3],  <-- Tiga absolut random target untuk allies
+  [:change_target, 11],
+  
+  Catatan :
+  Absolut target adalah target yang sudah pasti. Target tidak akan terkena
+  damage dua kali seperti random target pada default database 
+  
+  ===========================================================================
+  27) :show_pic
+  ---------------------------------------------------------------------------
+  
+  Di versi 1.4 ngga ada. Pake common event saja :v
+  
+  ===========================================================================
+  28) :target_move  | Untuk menggerakkan target ke koordinat tertentu
+  ---------------------------------------------------------------------------
+  Format --> [:target_move, x, y, dur, jump, (height)],
+  
+  Keterangan :
+  Command ini adalah untuk menggerakkan target ke koordinat tertentu. Sama
+  seperti command move hanya saja yang jadi subject adalah target saat itu
+  
+  Parameter :
+  x       >> Koordinat x tujuan
+  y       >> Koordinat y tujuan
+  dur     >> Durasi perjalanan dalam frame
+  jump    >> Loncatan
+  height  >> Lokasi ketinggian. Berhubungan dengan penempatan shadow (opsional)
+  
+  Contoh :
+  [:target_move, 200,50,25,0],
+  
+  ===========================================================================
+  29) :target_slide | Untuk menggeser target dari koordinatnya
+  ---------------------------------------------------------------------------
+  Format --> [:target_side, x, y, dur, jump, (height)],
+  
+  Keterangan :
+  Command ini adalah untuk menggeser target dari pusatnya. Sama seperti command 
+  slide hanya saja yang jadi subject adalah target saat itu
+  
+  Parameter :
+  x       >> Pergeseran x dari asal
+  y       >> Pergeseran y dari asal
+  dur     >> Durasi perjalanan dalam frame
+  jump    >> Loncatan
+  height  >> Lokasi ketinggian. Berhubungan dengan penempatan shadow (opsional)
+  
+  Contoh :
+  [:target_slide, 200,50,25,0],
+  
+  ===========================================================================
+  30) :target_reset  | Untuk mengembalikan target ke posisi semula
+  ---------------------------------------------------------------------------
+  Format --> [:target_reset, dur, jump]
+  
+  Keterangan :
+  Seperti goto_oripost. Hanya saja untuk target
+  
+  Parameter :
+  dur   >> Durasi perjalanan
+  jump  >> Loncatan
+  
+  Contoh :
+  [:target_reset, 5, 0],
+  
+  ===========================================================================
+  31) :blend  | Untuk mengganti tipe blending pada user
+  ---------------------------------------------------------------------------
+  Format --> [:blend, type]
+  
+  Keterangan :
+  Untuk mengganti blending type pada battler
+  
+  Isi type dengan pilihan berikut
+  0 >> Normal
+  1 >> Addition (cerah)
+  2 >> Substract (gelap)
+  
+  Contoh :
+  [:blend, 0],
+  [:blend, 1],
+  [:blend, 2],
+  
+  ===========================================================================
+  32) :focus  | Untuk menghilangkan battler yang bukan target
+  ---------------------------------------------------------------------------
+  Format --> [:focus, dur, (color)],
+  
+  Keterangan :
+  Command ini adalah untuk menghilangkan battle yang bukan target dan user. Jadi
+  action terfokus pada subject dan targetnya saja.
+  
+  Parameter :
+  dur   >> Durasi fadeout karakter dalam frame 
+  color >> Color.new(red, green, blue, alpha)
+  
+  Contoh :
+  [:focus, 30],
+  [:focus, 30, Color.new(0,0,0,128)],
+  
+  ===========================================================================
+  33) :unfocus  | Untuk menampilkan kembali semua battler
+  ---------------------------------------------------------------------------
+  Format --> [:unfocus, dur],
+  
+  Keterangan :
+  Sama seperti focus. Namun command ini adalah untuk menampilkan kembali battler
+  yang disembunyikan oleh focus. Wajib untuk dipanggil setelah focus dipanggil
+  
+  Parameter :
+  dur >> Durasi fadein dalam frame
+  
+  Contoh :
+  [:unfocus, 30],
+  
+  ===========================================================================
+  34) :target_lock_z  | Untuk mengunci koordinat Z target sementara
+  ---------------------------------------------------------------------------
+  Format --> [:target_lock_z, true/false]
+  
+  Keterangan :
+  Seperti :lock_z namun berlaku untuk target
+  
+  Contoh :
+  [:target_lock_z, true],
+  
+  +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+                              UPDATE VERSION 1.1
+  +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+  
+  ===========================================================================
+  35) :anim_top   | Untuk play animasi selalu didepan layar
+  ---------------------------------------------------------------------------
+  Format --> [:anim_top, (true/false)]
+  
+  Keterangan :
+  Flag untuk ngebuat animasi dijalankan di depan layar. Taruh tepat sebelum
+  sequence :cast atau :show_anim dan jangan lupa kembalikan jadi false 
+  sesudahnya
+  
+  Contoh :
+  [:anim_top],
+  [:cast],
+  [:anim_top, false],
+  
+  [:anim_top],
+  [:show_anim],
+  [:anim_top, false],
+
+  ===========================================================================
+  36) :freeze | Untuk ngefreeze semua gerakan selain yg aktif
+  ---------------------------------------------------------------------------
+  Format --> [:freeze, true/false]
+  
+  Keterangan :
+  Untuk menghentikan semua apdet selain gerakan battler yang sedang melakukan
+  aksi. Jangan lupa untuk selalu set false sebelum sequence skill battler
+  selesai dilakukan
+  
+  Contoh :
+  [:freeze, true],
+  [:freeze, false],
+  
+  Catatan :
+  Belom gw coba diaplikasiin ke game. Kemungkinan masi ada glitchnya.
+  
+  ===========================================================================
+  37) :cutin_start | Untuk nampilin gambar cutin
+  ---------------------------------------------------------------------------
+  Format --> [:cutin_start, file, x, y, opacity]
+  
+  Keterangan :
+  Untuk menampilkan gambar cutin actor. Namun bisa jadi digunakan untuk
+  menampilkan gambar. Karena awalnya ini gw bikin buat nampilin cutin, maka
+  gw namain aja :cutin_start
+  
+  Parameter :
+  file    >> Nama file gambar yang harus ada di Graphics/picture
+  x       >> Posisi awal X
+  y       >> Posisi awal Y
+  opacity >> Opacity awal (isi antara 0 - 255)
+  
+  Contoh :
+  [:cutin_start,"sol-cutin-nobg",100,0,0],
+  
+  Catatan :
+  Gambar yang dapat ditampilkan hanya satu
+  
+  ===========================================================================
+  38) :cutin_fade | Untuk memberi efek fadein/fadeout pada cutin
+  ---------------------------------------------------------------------------
+  Format --> [:cutin_fade, opacity, durasi]
+  
+  Keterangan :
+  Untuk merubah opacity gambar cutin ke nilai tertentu dengan durasi tertentu
+  
+  Parameter :
+  opacity >> Opacity target / tujuan
+  durasi  >> Durasi perubahan dalam hitungan frame (60 = 1 detik)
+  
+  Contoh :
+  [:cutin_fade, 255, 15],
+  
+  ===========================================================================
+  39) :cutin_slide | Untuk menggeser gambar cutin
+  ---------------------------------------------------------------------------
+  Format --> [:cutin_slide, x, y, durasi]
+  
+  Keterangan :
+  Untuk menggeser gambar cutin ke koordinat tertentu dengan durasi tertentu
+  
+  Parameter
+  x       >> Nilai pergeseran X
+  y       >> Nilai pergeseran Y
+  durasi  >> Durasi perjalanan dalam hitungan frame (60 = 1 detik)
+  
+  Contoh :
+  [:cutin_slide, -100, 0, 30]
+  
+  ===========================================================================
+  40) :target_flip | Untuk ngeflip target
+  ---------------------------------------------------------------------------
+  Format --> [:target_flip, true/false]
+  
+  Keterangan :
+  Untuk membalik target
+  
+  Contoh :
+  [:target_flip, true]
+  [:target_flip, false]
+  
+  ===========================================================================
+  41) :plane_add | Untuk nambahin gambar looping
+  ---------------------------------------------------------------------------
+  Format --> [:plane_add, file, speed_x, speed_y, (above), (dur), (opac)]
+  
+  Keterangan :
+  Command ini untuk menambahkan gambar looping seperti efek kabut, parallax
+  atau semacamnya.
+  
+  Parameter :
+  file    >> Nama gambar yang harus ada di Graphics/picture
+  speed_x >> Kecepatan scrolling ke arah horizontal
+  speed_y >> Kecepatan scrolling ke arah vertikal
+  above   >> Diatas battler? Tulis dengan true/false
+  dur     >> Durasi munculnya gambar dari opacity 0 sampai 255 dalam hitungan
+             frame. Bisa diabaikan, dan defaultnya adalah 2
+  opac    >> Opacity gambar looping. Defaultnya adalah 255
+  
+  Contoh :
+  [:plane_add,"cutin-bg",35,0,false,15],
+  
+  Catatan :
+  Gambar looping yang bisa dipasang cuman satu
+  
+  ===========================================================================
+  42) :plane_del | Untuk ngehapus gambar looping
+  ---------------------------------------------------------------------------
+  Format --> [:plane_del, durasi]
+  
+  Keterangan :
+  Command ini untuk menghapus gambar looping yang telah dipanggil oleh command 
+  :plane_add dengan durasi yang dihitung dalam hitungan frame.
+  
+  Contoh :
+  [:plane_del, 30],
+  
+  ===========================================================================
+  43) :boomerang | Untuk memberi efek boomerang pada proyektil
+  ---------------------------------------------------------------------------
+  Format --> [:boomerang]
+  
+  Keterangan :
+  Flag untuk menandai proyektil yang akan dilempar akan kembali lagi kepada
+  user / caster. Gunakan tepat sebelum command sequence :projectile
+  
+  Contoh :
+  [:boomerang],
+  [:projectile,0,8,15,154,20],
+  
+  ===========================================================================
+  44) :proj_afimage | Untuk memberi efek afterimage pada proyektil
+  ---------------------------------------------------------------------------
+  Format --> [:proj_afimage]
+  
+  Keterangan :
+  Flag untuk menandai proyektil yang akan dilempar ditambahi efek afterimage.
+  Gunakan tepat sebelum sequence command :proyektil
+  
+  Contoh :
+  [:proj_afimage],
+  [:projectile,0,8,15,154,20],
+  
+  Kalau dipakai bersamaan dengan :boomerang
+  [:boomerang],
+  [:proj_afimage],
+  [:projectile,0,8,15,154,20],
+  
+  ===========================================================================
+  45) :balloon | Untuk menampilkan balloon icon pada battler
+  ---------------------------------------------------------------------------
+  Format --> [:balloon, id]
+  
+  Keterangan :
+  Untuk menampilkan balloon pada battler
+  
+  Contoh :
+  [:balloon, 1],
+  
+  +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+                              UPDATE VERSION 1.2
+  +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+  
+  ===========================================================================
+  46) :log | Untuk menampilkan text di battle log
+  ---------------------------------------------------------------------------
+  Format --> [:log, "Text"]
+  
+  Keterangan :
+  Untuk menampilkan teks para battle log. Gunakan "<name>" untuk menampilkan
+  nama subject battler.
+  
+  Contoh :
+  [:log, "<name> disappears!"],
+  
+  ===========================================================================
+  47) :log_clear | Untuk menghapus semua isi log window
+  ---------------------------------------------------------------------------
+  Format --> [:log_clear]
+  
+  Keterangan :
+  Untuk menghapus semua isi battle log.
+  
+  Contoh :
+  [:log_clear],
+  
+  ===========================================================================
+  48) :aft_info | Untuk mengganti settingan afterimage
+  ---------------------------------------------------------------------------
+  Format --> [:aft_info, rate, fade_speed]
+  
+  Keterangan :
+  Untuk mengubah settingan afterimage. Seperti nambahin makin pekat atau 
+  mengurangi kecepatan fade.
+  
+  Parameter :
+  - rate  >> Kepekatan afterimage. Makin kecil makin pekat. Minimal 1. Nilai
+             defaultnya adalah 3
+  - fade  >> Kecepatan fadeout afterimage. Makin kecil makin lama menghilang.
+             Nilai defaultnya adalah 20
+  
+  Contoh :
+  [:aft_info, 1,10],
+  
+  ===========================================================================
+  49) :sm_move | Untuk bergerak ke koordinat dengan halus
+  ---------------------------------------------------------------------------
+  Format --> [:sm_move, x, y, dur, (rev)]
+  
+  Keterangan :
+  Sama seperti command :move. Namun yang ini disertai dengan percepatan. Jadi
+  terlihat lebih smooth.
+  
+  Parameter :
+  x   >> Target koordinat X
+  y   >> Target koordinat Y
+  dur >> Durasi perjalanan
+  rev >> Reverse. Jika kamu tulis true, maka sprite akan berjalan dari
+         kecepatan maksimum. Jika false, kecepatan dimulai dari 0. Defaultnya
+         adalah true
+         
+  Contoh :
+  [:sm_move, 100,50,45],
+  [:sm_move, 100,50,45,true],
+  
+  ===========================================================================
+  50) :sm_slide | Untuk bergeser beberapa pixel dengan halus
+  ---------------------------------------------------------------------------
+  Format --> [:sm_slide, x, y, dur, (rev)]
+  
+  Keterangan :
+  Sama seperti command :slide. Namun yang ini disertai dengan percepatan. Jadi
+  terlihat lebih smooth.
+  
+  Parameter :
+  x   >> Jarak perpindahan X dari koordinat asli
+  y   >> Jarak perpindahan Y dari koordinat asli
+  dur >> Durasi perjalanan
+  rev >> Reverse. Jika kamu tulis true, maka sprite akan berjalan dari
+         kecepatan maksimum. Jika false, kecepatan dimulai dari 0. Defaultnya
+         adalah true
+         
+  Contoh :
+  [:sm_slide, 100,50,45],
+  [:sm_slide, 100,50,45,true],
+  
+  ===========================================================================
+  51) :sm_target | Untuk bergerak ke target dengan halus
+  ---------------------------------------------------------------------------
+  Format --> [:sm_target, x, y, dur, (rev)]
+  
+  Keterangan :
+  Sama seperti command :move_to_target. Namun yang ini disertai dengan 
+  percepatan. Jadi terlihat lebih smooth.
+  
+  Parameter :
+  x   >> Jarak X dari koordinat target
+  y   >> Jarak Y dari koordinat target
+  dur >> Durasi perjalanan
+  rev >> Reverse. Jika kamu tulis true, maka sprite akan berjalan dari
+         kecepatan maksimum. Jika false, kecepatan dimulai dari 0. Defaultnya
+         adalah true
+  
+  Contoh :
+  [:sm_target, 100,0,45],
+  [:sm_target, 100,0,45,true],
+  
+  Catatan 1:
+  Jika battler diflip, maka koordinat X juga akan ikut diflip. Dalam artian
+  jika x minus yang pada arti awalnya adalah geser ke kiri, maka akan berubah
+  jadi geser ke kanan
+  
+  Catatan 2:
+  Jika target yang dituju adalah area (target area), maka battler akan bergerak
+  kearah tengah-tengah dari kumpulan target tersebut.
+  
+  ===========================================================================
+  52) :sm_return | Untuk kembali ke posisi dengan halus 
+  ---------------------------------------------------------------------------
+  Format --> [:sm_return, dur, (rev)]
+  
+  Keterangan :
+  Sama seperti command :goto_oripost. Namun yang ini disertai dengan percepatan. 
+  Jadi terlihat lebih smooth.
+  
+  Parameter :
+  dur >> Durasi perjalanan
+  rev >> Reverse. Jika kamu tulis true, maka sprite akan berjalan dari
+         kecepatan maksimum. Jika false, kecepatan dimulai dari 0. Defaultnya
+         adalah true
+  
+  Contoh :
+  [:sm_return,30],
+  [:sm_return,30,true],       
+
+  +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+                              UPDATE VERSION 1.3
+  +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+  
+  ===========================================================================  
+  53) :loop | Untuk looping sebanyak n kali
+  ---------------------------------------------------------------------------
+  Format --> [:loop, times, "Key"]
+  
+  Keterangan :
+  Sama seperti [:action,]. Hanya saja, daripada kamu kopi beberapa kali, kamu
+  bisa menyederhanakannya hanya dengan satu baris
+  
+  Parameter :
+  times >> Berapa kali action key akan dipanggil
+  Key   >> Action Key yang akan dipanggil
+  
+  Contoh :
+  [:loop, 3, "CastPose"],
+  
+  Alternatif :
+  Jika kamu tidak mau membuat action sequence baru kamu bisa langsung
+  definisikan di dalam command loop.
+  
+  Contoh :
+  [:loop, 3, 
+    [
+    [:show_anim],
+    [:target_damage],
+    [:wait, 25],
+    ]
+  ],
+  
+  ===========================================================================  
+  54) :while | Untuk looping selama kondisi benar
+  ---------------------------------------------------------------------------
+  Format --> [:while, cond, "key"]
+  
+  Keterangan :
+  Mirip seperti looping. Hanya saja, action key ini akan diulang terus selama
+  kondisi yang kamu inputkan itu benar.
+  
+  Parameter :
+  cond >> Kondisi salah benar dalam script
+  key  >> Action key yang akan dipanggil
+  
+  Contoh :
+  [:while, "$game_variables[1] < 10", "Sol_Strike"]
+  
+  ===========================================================================  
+  55) :collapse | Untuk manggil fungsi collapse
+  ---------------------------------------------------------------------------
+  Format --> [:collapse]
+  
+  Keterangan :
+  Untuk manggil fungsi play collapse secara manual jika kamu mau gunain custom
+  collapse effect. Dan gunakan HANYA untuk custom collapse effect
+  
+  Contoh :
+  [:collapse],
+  
+  ===========================================================================  
+  56) :forced | Untuk maksa target buat ganti action key
+  ---------------------------------------------------------------------------
+  Format --> [:forced, "key"]
+  
+  Keterangan :
+  Maksa target untuk mengganti action key yang sedang dipakai. Jika digunakan
+  dalam counterattack, bisa untuk dijadikan efek knockback yang mematahkan
+  serangan kombo hit lebih dari 1 kali
+  
+  Parameter :
+  key >> Action Key yang akan dipaksa pakai oleh target
+  
+  Contoh :
+  [:forced, "KnockBack"],
+  
+  ===========================================================================  
+  57) :anim_bottom | Untuk play animasi di bawah
+  ---------------------------------------------------------------------------
+  Format --> [:anim_bottom]
+  
+  Keterangan :
+  Seperti [:anim_top]. Hanya saja ini membuat animasi berikutnya akan diplay
+  di belakang battler. Panggil tepat sebelum [:cast] ato [:show_anim] dan
+  jangan lupa kembalikan ke false sesudahnya.
+  
+  Contoh :
+  [:anim_bottom],
+  [:cast, 69],
+  [:anim_bottom, false],
+  
+  [:anim_bottom],
+  [:show_anim],
+  [:anim_bottom, false],
+  
+  ===========================================================================  
+  58) :case | Untuk kondisi bercabang lebih dari dua
+  ---------------------------------------------------------------------------
+  Format --> [:case, hash]
+  
+  Keterangan :
+  Digunakan untuk membuat kondisi bercabang yang lebih dari dua kondisi. Lebih
+  mudah dilakukan daripada harus menggunakan nested if ([:if] di dalam [:if])
+  
+  --------------------------
+  Parameter :
+  Hash >> List kondisi percabangan dengan format yang harus ditulis seperti
+          berikut ini :
+          {
+            "Kondisi 1" => "ActionKey1",
+            "Kondisi 2" => "ActionKey2",
+            "Kondisi 3" => "ActionKey3",
+          }
+          
+  Contoh :
+  [:case, {
+    "$game_variables[1] == 1" => "Action1",
+    "$game_variables[1] == 2" => "Action2",
+    "$game_variables[1] == 3" => "Action3",
+    "$game_variables[1] == 4" => "Action4",
+    "$game_variables[1] == 5" => "Action5",
+  }],
+  
+  --------------------------
+  Alternatif :
+  --------------------------
+  Jika kamu terlalu malas untuk membikin action sequence baru hanya untuk satu
+  baris sequence, kamu bisa langsung menambahkan array [] di dalamnya. 
+  
+  Contoh : 
+  [:case,{
+    "state?(44)" => [:add_state,45],
+    "state?(43)" => [:add_state,44],
+    "state?(42)" => [:add_state,43],
+    "true" => [:add_state,42],
+  }],
+  
+  --------------------------
+  Alternatif lain :
+  --------------------------
+  Jika kamu terlalu malas untuk membikin action sequence baru, kamu bisa
+  memasukkan sequence baru ke dalam cabang tanpa harus membuat action key
+  yang baru lagi.
+  
+  Contoh : 
+  [:case,{
+    "state?(44)" => [
+      [:show_anim, 1],
+      [:target_damage, 1],
+    ],
+    
+    "state?(43)" => [
+      [:show_anim, 1],
+      [:target_damage, 1],
+    ],
+    
+    "state?(42)" => [
+      [:show_anim, 1],
+      [:target_damage, 1],
+    ],
+    
+    "true" => [
+      [:show_anim, 1],
+      [:target_damage, 1],
+    ],
+  }],
+  
+  Catatan :
+  - Jika ada lebih kondisi yang benar, maka kondisi yang letaknya paling atas
+    sendiri yang akan digunakan.
+  
+  ===========================================================================  
+  59) :instant_reset | Untuk mereset posisi battler secara instant
+  ---------------------------------------------------------------------------
+  Format --> [:instant_reset]
+  
+  Keterangan :
+  Untuk mereset posisi battler secara instant / langsung.
+  
+  Contoh :
+  [:instant_reset],
+  
+  ===========================================================================  
+  60) :anim_follow | Untuk membuat animasi mengikuti battler
+  ---------------------------------------------------------------------------
+  Format --> [:anim_follow]
+  
+  Keterangan :
+  Seperti [:anim_top]. Hanya saja ini membuat animasi berikutnya akan diplay
+  mengikuti gerak battler. Panggil tepat sebelum [:cast] ato [:show_anim] dan
+  jangan lupa kembalikan ke false sesudahnya.
+  
+  Contoh :
+  [:anim_follow],
+  [:cast, 69],
+  [:anim_follow, false],
+  
+  [:anim_follow],
+  [:show_anim],
+  [:anim_follow, false],
+  
+  Tidak bekerja pada animasi yang posisinya pada screen
+
+  ===========================================================================  
+  61) :change_skill | Untuk mengganti skill agar lebih mudah digunakan
+  ---------------------------------------------------------------------------
+  Format --> [:change_skill, id]
+  
+  Keterangan :
+  Sama seperti [:target_damage, id]. Hanya saja, ini mengganti skill yang
+  "dibawa" oleh battler sepenuhnya. Dalam artian kamu bisa menskala atau
+  mengganti formula pada skill lain.
+  
+  Contoh :
+  [:change_skill, 13],
+  [:target_damage, 0.5],
+  [:wait, 15],
+  [:target_damage, 1.5],
+  [:wait, 15],
+  [:target_damage, 0.5],
+  [:wait, 15],
+  
+  Kamu bisa menskala damage output yang dikeluarkan dari skill id 13 yang tidak
+  bisa dilakukan oleh [:target_damage] biasa.
+  
+  +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+                              UPDATE VERSION 1.3b
+  +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+  
+  ===========================================================================  
+  62) :check_collapse | Untuk perform collapse pada target
+  ---------------------------------------------------------------------------
+  Format --> [:check_collapse]
+  
+  Keterangan :
+  Digunakan untuk perform collapse pada target jika target mencapai HP  = 0
+  Dengan kata lain, collapse effect akan dilakukan pada saat action sequence
+  berjalan. Collapse tidak akan dijalankan jika target masih hidup
+  
+  Contoh :
+  [:target_damage],
+  [:check_collapse],
+  
+  ===========================================================================  
+  63) :reset_counter | Untuk mereset damage counter
+  ---------------------------------------------------------------------------
+  Format --> [:reset_counter]
+  
+  Keterangan :
+  Digunakan untuk mereset damage counter. Semisal pada damage counter
+  menunjukkan total hit : 5, dengan kamu memanggil command ini, maka counter
+  akan kembali menjadi 1
+  
+  Contoh :
+  [:reset_counter],
+  
+  ===========================================================================  
+  64) :force_hit | Untuk membuat skill always hit untuk sementara
+  ---------------------------------------------------------------------------
+  Format --> [:force_hit, (true/false)]
+  
+  Keterangan :
+  Digunakan untuk membuat serangan [:target_damage] berikutnya menjadi always 
+  hit. Panggil sebelum command [:target_damage] dilakukan.
+  
+  Contoh :
+  [:force_hit],
+  [:show_anim],
+  [:target_damage],
+  [:force_hit, false], << untuk mengembalikan semula
+  
+  ===========================================================================
+  65) :slow_motion | Untuk membuat effect slow motion
+  ---------------------------------------------------------------------------
+  Format --> [:slow_motion, frame, rate]
+  
+  Keterangan :
+  Command ini digunakan untuk membuat effect slow motion dimana pergerakan
+  action sequence akan terlihat diperlambat
+  
+  Parameter :
+  Frame >> Dalam berapa frame kedepan effect slow motion akan berjalan?
+  Rate  >> Rate perlambatan. Default FPS adalah 60. Jika kamu memasukkan rate
+           dengan nilai 2, maka FPS akan turun menjadi 30. Jika kamu memasukkan
+           nilai lebih tinggi, FPS akan turun menjadi 20, 15, 10 dst ...
+  
+  Contoh : 
+  [:slow_motion, 30, 2],
+  
+  ===========================================================================
+  66) :timestop | Untuk menghentikan screen sementara
+  ---------------------------------------------------------------------------
+  Format --> [:timestop, frame]
+  
+  Keterangan :
+  Command ini digunakan untuk menghentikan screen selama waktu durasi sekian
+  frame.
+  
+  Contoh :
+  [:timestop, 60],
+  
+  +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+                              UPDATE VERSION 1.3c
+  +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+  ===========================================================================  
+  67) :one_anim | Untuk membuat satu animasi untuk area attack
+  ---------------------------------------------------------------------------
+  Format --> [:one_anim],
+  
+  Keterangan :
+  Adalah tanda untuk membuat animasi berikutnya hanya ditampilkan sekali jika
+  target saat itu adalah target area. Animasi akan ditampilkan di tengah-tengah
+  dari semua target. Masukkan command ini sebelum [:show_anim]. Dapat dipakai
+  pada proyektil juga
+  
+  Contoh :
+  [:one_anim],
+  [:show_anim],
+  
+  ===========================================================================  
+  68) :proj_scale | Untuk menskala damage dari proyektil
+  ---------------------------------------------------------------------------
+  Format --> [:proj_scale, (scale / formula)],
+  
+  Keterangan :
+  Command ini untuk menyekala damage dari serangan proyektil. Tidak sama
+  seperti command flag yang lain yang hanya berefek sekali. Command ini akan
+  berefek seterusnya sampai kamu mengembalikannya lagi
+  
+  Kamu bisa mengisinya dengan skala seperti [:proj_scale, 1.0] atau damage
+  formula seperti [proj_scale, "a.atk * 4 - b.def * 2"],
+  
+  Contoh :
+  [:projectile, ...], # <-- Tidak akan kena efek
+  [:proj_scale, 0.5], # <-- Skala damage 50%
+  [:projectile, ...], # <-- Terkena efek skala damage
+  [:projectile, ...], # <-- Terkena efek skala damage
+  [:proj_scale, 1.0], # <-- Dikembalikan ke semula
+  
+  ===========================================================================    
+  69) :com_event | Untuk memanggil common event saat sequence
+  ---------------------------------------------------------------------------
+  Format --> [:com_event, id],
+  
+  Keterangan :
+  Command ini digunakan untuk memanggil common event saat action sequence.
+  Common event akan dijalankan bersamaan dengan action sequence.
+  
+  Contoh :
+  [:com_event, 1], # <-- Akan menjalankan common event 1
+  
+  ~~~~~~~~~~~~~~~~~~~
+  Untuk mencegah action sequence dilanjutkan, kamu bisa menggunakan command
+  [:while] dan "event_running?" untuk mengeceknya
+  
+  Contoh :
+  [:com_event, 1],
+  [:while, "event_running?", "K-Idle"],
+  
+  Saat common event dijalankan, sprite akan melakukan "K-Idle" secara berulang
+  kali sampai common event selesai
+  
+  ===========================================================================  
+  70) :scr_freeze | Untuk membuat screen berhenti diupdate
+  ---------------------------------------------------------------------------
+  Format --> [:scr_freeze],
+  
+  Keterangan :
+  Untuk mengehentikan screen dari update. Tidak sama dengan [:freeze]. Yang satu
+  ini benar-benar menghentikan screen. Harus dipanggil sebelum transisi
+  
+  Example :
+  [:scr_freeze], # <-- Ingat. Tidak ada parameter seperti true / false
+  
+  ===========================================================================  
+  71) :scr_trans | Untuk melakukan transisi
+  ---------------------------------------------------------------------------
+  Format --> [:scr_trans, "file", dur, (vague)],
+  
+  Keterangan :
+  Digunakan untuk transisi setelah screen dihentikan. [:scr_freeze] harus
+  dipanggil sebelum menggunakan command ini
+  
+  Parameter :
+  "file" >> Nama file gambar transisi yang ada di Graphics/pictures
+  dur    >> Durasi transisi dalam frame (60 frame = 1 detik)
+  vague  >> Nilai ambiguitas. Semakin besar nilai, semakin besar ambiguitasnya.
+            Dapat diabaikan. Nilai defaultnya adalah 40
+  
+  Contoh :
+  [:scr_freeze],
+  [:plane_add, "magic_square01", 0, 0, false, 1],
+  [:focus, 1, Color.new(0,0,0,0)],
+  [:scr_trans, "Circle", 60],
+  
+  [:scr_freeze],
+  [:plane_add, "magic_square01", 0, 0, false, 1],
+  [:focus, 1, Color.new(0,0,0,0)],
+  [:scr_trans, "Circle", 60, 120],
+  
+  +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+                              UPDATE VERSION 1.4
+  +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+  
+  ===========================================================================  
+  72) :force_evade      | Untuk membuat target selalu evade
+  73) :force_reflect    | Untuk membuat target reflek magic
+  74) :force_counter    | Untuk membuat target selalu counterattack
+  75) :force_critical   | Untuk membuat serangan critical
+  76) :force_miss       | Untuk membuat serangan ke target meleset
+  ---------------------------------------------------------------------------
+  Format --> [:force_x, (true/false)],
+  
+  Keterangan :
+  Semua ini satu seri dengan [:force_hit] dan penggunaannya. Tempatkan tepat
+  sebelum [:target_damage]. Semisal kamu menggunakan [:force_evade], maka 
+  target serangan akan selalu menghindar. Dan jangan lupa untuk mengeset ke
+  false setelah selesai dipakai.
+  
+  Contoh :
+  [:if, "@timed_hit", [:force_evade]],
+  
+  ===========================================================================  
+  77) :backdrop         | Untuk mengganti battleback
+  78) :back_trans       | Untuk menyeting transnsi latar belakang
+  79) :reset_backdrop   | Untuk mereset balik battleback
+  ---------------------------------------------------------------------------
+  Format --> [:backdrop, "Nama1", "Nama2"],
+  
+  Keterangan : 
+  Command :backdrop adalah untuk mengganti battleback. Nama1 adalah 
+  representasi dari battleback1 dan begitu juga Nama2 representasi dari 
+  battleback2.
+  
+  Contoh :
+  [:backdrop, "Lava2", "Lava"],
+  
+  ------------------------------
+  Format --> [:back_trans, {}],
+  
+  Keterangan :
+  Command ini berguna untuk menyeting transisi battleback jika kamu mau 
+  mengubah battleback dengan command [:backdrop]. Cara setting mirip seperti
+  [:proj_setup] dengan parameter sebagai berikut
+  
+  :switch   => Gunakan transisi? (true/false)
+  :duration => Durasi
+  :name     => File Transisi yang ada di Graphics/system
+  :vague    => Nilai vague. Makin besar, makin blur (max. 255)
+  
+  Contoh :
+  [:back_trans, {:name => "Whirlwind", :duration => 60, :vague => 180}],
+  
+  ------------------------------
+  Format --> [:reset_backdrop]
+  
+  Keterangan :
+  Untuk mereset kembali battleback setelah diganti oleh command [:backdrop].
+  Command ini tidak membutuhkan parameter
+  
+  ===========================================================================
+  80) :target_focus     | Untuk membuat target custom untuk fokus
+  ---------------------------------------------------------------------------
+  Format --> [:target_focus, (option)]
+  
+  Keterangan :
+  Command ini adalah untuk memberikan opsi battler yang mana saja yang akan
+  tetap ditampilkan saat command [:focus] dipanggil. Taruh command ini sebelum
+  [:focus].
+  
+  Parameter :
+  Masukkan opsi antara bilangan 0 ~ 3
+  0 > Target sekarang / saat ini
+  1 > Semua unit musuh
+  2 > Semua unit teman
+  3 > Semua unit musuh dan teman
+  
+  Contoh :
+  [:target_focus, 1],
+  [:focus, ...],
+  
+  ===========================================================================
+  81) :scr_fadeout      | Untuk membuat Fadeout screen
+  82) :scr_fadein       | Untuk membuat Fadein screen
+  ---------------------------------------------------------------------------
+  Format --> [:scr_fadeout, durasi],
+  Format --> [:scr_fadein, durasi],
+  
+  Keterangan :
+  Command di atas adalah untuk membuat screen fadeout atau fadein seperti yang
+  ada di event. Durasi adalah waktu untuk melakukan efek dalam hitungan frame
+  
+  Contoh :
+  [:scr_fadeout, 30],
+  
+  ===========================================================================
+  83) :check_cover      | Untuk mengecek battler yang akan mengkover
+  ---------------------------------------------------------------------------
+  Format --> [:check_cover],
+  
+  Keterangan :
+  Command ini adalah untuk mengecek apakah target yang sedang diserang akan
+  dicover ama battler lain atau ngga, untuk mencegah keanehan (jika ada).
+  Panggil sebelum [:target_damage] atau sebelum proyektil sampai ke tujuan.
+  
+  Contoh :
+  [:check_cover],
+  [:wait, 10],
+  [:target_damage],
+  [:show_anim],
+  
+  ===========================================================================
+  84) :stop_move        | Untuk menghentikan gerakan (jika bergerak)
+  ---------------------------------------------------------------------------
+  Format --> [:stop_move],
+  
+  Keterangan :
+  Command ini adalah untuk menghentikan gerakan semisal battler lagi di tengah
+  tengah bergerak.
+  
+  Contoh :
+  [:slide, -100, 0, 40, 10],
+  [:wait, 20],
+  [:stop_move],
+  
+  ===========================================================================
+  85) :rotate           | Untuk memutar gambar battler
+  ---------------------------------------------------------------------------
+  Format --> [:rotate, start, end, durasi],
+  
+  Keterangan :
+  Command ini adalah untuk merotasi battler.
+  
+  Parameter
+  > start   : Sudut awal putaran
+  > end     : Sudut akhir putaran
+  > durasi  : Durasi berputar
+  
+  Contoh :
+  [:rotate, 0, 360, 45],
+  [:rotate, 0, 360 * 4, 90], (berputar 4 kali)
+  
+  ===========================================================================
+  86) :fadein           | Untuk membuat battler menghilang
+  87) :fadeout          | Untuk membuat battler muncul kembali
+  ---------------------------------------------------------------------------
+  Format --> [:fadein, durasi],
+  Format --> [:fadeout, durasi],
+  
+  Keterangan :
+  Command ini adalah untuk membuat battler fadeout dalam jangka waktu berdasar
+  frame. Disarankan jika kamu menggunakan [:fadeout] pastikan kamu memanggil
+  kembali [:fadein] atau battler kamu akan hilang selamanya :v
+  
+  Contoh :
+  [:fadeout, 30],
+  [:wait, 30],
+  [:fadein, 30],
+  
+  ===========================================================================
+  88) :immortal         | Untuk menandai sebagai Immortal sesaat
+  ---------------------------------------------------------------------------
+  Format --> [:immortal],
+  
+  Keterangan :
+  Command ini adalah untuk menandai target sebagai immortal. Dimana target
+  tidak akan terkena state death sampai pengecekan collapse apakah HP target
+  mencapat 0. Panggil command ini sebelum [:target_damage]
+  
+  Kamu tidak perlu menggunakan command ini jika kamu mengeset AutoImmortal 
+  pada config 1 sebagai true
+  
+  Contoh :
+  [:immortal],
+  [:show_anim],
+  [:target_damage],
+  [:wait, 45],
+  [:check_collapse],
+  
+  ===========================================================================
+  89) :end_action       | Untuk mengakhiri sequence
+  ---------------------------------------------------------------------------
+  Format --> [:end_action],
+  
+  Keterangan :
+  Command ini adalah untuk memaksa battler yang sedang melakukan aksi skill
+  untuk menghentikan sequencenya walaupun itu masih ada di tengah-tengah.
+  
+  ===========================================================================
+  90) :shadow           | Untuk membuat shadow visible atawa ngga
+  ---------------------------------------------------------------------------
+  Format --> [:shadow, true / false]
+  
+  Keterangan :
+  Command ini adalah untuk membuat shadow pada SEMUA battler ditampilkan atau
+  tidak.
+  
+  Contoh :
+  [:shadow, true],
+  [:shadow, false],
+
+  ===========================================================================
+  91) :autopose         | Untuk membuat pose otomatis
+  ---------------------------------------------------------------------------
+  Format --> [:autopose, number, frame, wait]
+  
+  Keterangan :
+  Command ini adalah untuk mempermudah pembuatan sequence. Seperti jalankan
+  semua animasi pada baris ke sekian. Command ini membutuhkan :wait untuk
+  menyelesaikan tugasnya
+  
+  Parameter :
+  number  >> Adalah untuk angka dari nama gambar. Seperti Ralph_1, Ralph_2 
+  row     >> Baris ke berapa yang akan kamu animasikan?
+  wait    >> Jeda dalam frame untuk setiap pergantian gambar
+  
+  Contoh :
+  [:autopose, 1, 1, 15],
+  [:wait, 15 * 3],
+  
+  ===========================================================================
+  92) :icon_file        | Untuk memanggil show icon dari gambar
+  ---------------------------------------------------------------------------
+  Format --> [:icon_file, file],
+  
+  Keterangan :
+  Command ini adalah untuk menampilkan icon dari gambar yang ada di
+  Graphics/system. Jika kamu memanggil command ini sebelum show icon, maka
+  saat show icon, dia akan menampilkan gambar dari nama yang sudah kamu tulis
+  ketimbang nampilin gambar weapon
+  
+  Contoh :
+  [:icon_file, 'Sword'],
+  
+  ===========================================================================
+  93) :ignore_flip      | Untuk mengabaikan dibaliknya koordinat X
+  ---------------------------------------------------------------------------
+  Format --> [:ignore_flip, (true/false)],
+  
+  Keterangan :
+  Saat battler diflip, maka koordinat X yang semula minus jadi plus dan 
+  begitu pula sebaliknya. Untuk menghilangkan efek itu, kamu bisa panggil
+  command ini
+  
+}
+# =============================================================================
+  AnimLoop = { # <-- Jangan disentuh!
+# -----------------------------------------------------------------------------
+# Disini kalian dapat mendefinisikan sendiri action sequence kamu
+# -----------------------------------------------------------------------------
+  "IDLE" => [
+  #[Loop, afterimage, flip]
+  [true, false],
+  [:pose,     1,   0,   10],
+  [:pose,     1,   1,   10],
+  [:pose,     1,   2,   10],
+  [:pose,     1,   1,   10],
+  ],
+  # ---------------------------------------------------------------------------
+  # Enemy idle sequence
+  # ---------------------------------------------------------------------------
+  "Enemy_IDLE" => [
+  [true, false, true],
+  [:pose,     1,   0,   10],
+  [:pose,     1,   1,   10],
+  [:pose,     1,   2,   10],
+  [:pose,     1,   3,   60],
+  ],
+  # ---------------------------------------------------------------------------
+  # Basic attack sequence
+  # ---------------------------------------------------------------------------
+  
+  
+  
+  
+  # ---------------------------------------------------------------------------
+  # Move to target
+  # ---------------------------------------------------------------------------
+  "MOVE_TO_TARGET_FAR" => [
+  [:move_to_target, 130, 0, 15, 10],
+  [:pose, 2, 6, 8],
+  [:pose, 1, 0, 20],
+  ],
+  # ---------------------------------------------------------------------------
+  # Move to target
+  # ---------------------------------------------------------------------------
+  "MOVE_TO_TARGET" => [
+  [:move_to_target, 50, 0, 15, 10],
+  [:pose, 2, 6, 8],
+  [:pose, 1, 0, 20],
+  ],
+  # ---------------------------------------------------------------------------
+  # Skill cast
+  # ---------------------------------------------------------------------------      
+  "SKILL_CAST" => [
+  [:cast, 81],
+  [:wait, 60],
+  ],
+  # ---------------------------------------------------------------------------
+  # Target damage
+  # ---------------------------------------------------------------------------
+  "Target Damage" => [
+  [:show_anim],
+  [:target_damage],
+  ],
+  # ---------------------------------------------------------------------------
+  # Use item sequence
+  # ---------------------------------------------------------------------------
+  "ITEM_USE" => [
+  [false,false,nil],
+  [:slide, -50, 0, 10, 10],
+  [:wait, 30],
+  [:show_anim],
+  [:target_damage],
+  [:wait, 60],
+  ],
+  # ---------------------------------------------------------------------------
+  # Default reset sequence
+  # ---------------------------------------------------------------------------
+  "RESET" => [
+  [false,false,:ori],
+  [:visible, true],
+  [:unfocus, 30],
+  [:icon, "Clear"],
+  [:if, "@ori_x != x || @ori_y != y", # If location changed?
+    [
+    [:goto_oripost, 17,10],
+    [:pose,1,0,17],
+    ],
+  ],
+  ],
+  # ---------------------------------------------------------------------------
+  # Default escape sequence
+  # ---------------------------------------------------------------------------
+  "ESCAPEr" => [
+  [false,false,false],
+  [:slide, 150, 0, 10, 25],
+  [:wait, 30],
+  ],
+  # ---------------------------------------------------------------------------
+  # Default guard sequence
+  # ---------------------------------------------------------------------------
+  "GUARD" => [
+  [false,false],
+  [:target_damage],
+  [:wait, 2],
+  [:sound, "Equip2", 70, 100],
+  [:wait, 20],
+  ],
+  # ---------------------------------------------------------------------------
+  # Default enemy evade
+  # ---------------------------------------------------------------------------  
+  "E-evade" => [
+  [],
+  [:ignore_flip],
+  [:slide, -20, 0, 5, 6],
+  [:wait, 7],
+  [:goto_oripost, 7, 0],
+  [:wait, 7],
+  ],
+  
+    "Opponent_counter" => [
+  [false, false, false],
+  [:wait, 55],
+  [:action, "Opponent_assault"],
+  ],
+ 
+  "Opponent_assault" => [
+  [false, false, false],
+  [:move_to_target, -10, 0, 15, 10],
+  [:wait, 15],
+  [:target_damage],
+  [:show_anim],
+  [:wait, 40],
+  [:goto_oripost, 15, 10],
+  [:wait, 55],
+  ],
+  
+  
+  }
+  
+  
+  
+end
