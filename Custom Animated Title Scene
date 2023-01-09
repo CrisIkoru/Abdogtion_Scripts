@@ -1,0 +1,1296 @@
+#<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>#
+#                                                                              #
+#                        V's Custom Animated Title Scene                       #
+#                                 Version  2.7                                 #
+#                                                                              #
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#                                Written By:  V                                #
+#                         Last Edited: January 5, 2013                         #
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#                              Special Thanks to:                              #
+#                                                                              #
+#                                   Mithran                                    #
+#                                                                              #
+#<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>#
+ 
+  
+#==============================================================================#
+#------------------------------------------------------------------------------#
+# ** Disclaimer                                                                #
+#------------------------------------------------------------------------------#
+#                                                                              #
+# This script was intended for Non-commercial use only, if you wish to use     #
+# this script in a commercial game please PM me at which ever site you found   #
+# this script. Either way please give me credit in your game script as the     #
+# writer of this script, and send me a PM abuot the release of the game/demo.  #
+#                                                                              #
+#------------------------------------------------------------------------------#
+# ** How To Use                                                                #
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#                                                                              #
+# * This script has a customizable area below.                                 #
+#                                                                              #
+# * All images must be saved in the "Titles1" folder of your project.          #
+#                                                                              #
+# * If you are unsure how to use this script please see the help file included #
+#   in the demo, or visit http://pastebin.com/raw.php?i=tqLTXBar.              #
+#                                                                              #
+# * If using variable animations remember to name your frames with "_(number)" #
+#   (check the slime images in the titles1 folder of the demo for details.     #
+#                                                                              #
+# * Remember you can overload on animations and slow down the scene            #
+#   dramatically if moderation is not used.                                    #
+#                                                                              #                                                                              #
+# * Most but, not all animations will work properly with eachother.            # 
+#                                                                              #
+#------------------------------------------------------------------------------#
+# ** Description                                                               #
+#------------------------------------------------------------------------------#
+#                                                                              #
+#  v0.1                                                                        #
+# ~=~=~=~                                                                      #
+#  * This script allows you to fully manipulate the Title Screen.              #
+#                                                                              #
+#  v0.2                                                                        #
+# ~=~=~=~                                                                      #
+#  * I fixed a the loading screen bug and a few others.                        #
+#                                                                              #
+#  v0.3                                                                        #
+# ~=~=~=~                                                                      #
+#  * I added in a multiple animation types function for each layer, as well as #
+#    variable, blending and wave animations.                                   #
+#                                                                              #
+#  v0.4                                                                        #
+# ~=~=~=~                                                                      #
+#  * I fixed a problem with the variable animations not working right          #
+#                                                                              #
+#  v0.5                                                                        #
+# ~=~=~=~                                                                      #
+#  * I added a cursor animation type.                                          #
+#                                                                              #
+#  v1.0                                                                        #
+# ~=~=~=~                                                                      #
+#  * I fixed a bug with the cursor animation type.                             #
+#                                                                              #
+#  v1.1                                                                        #
+# ~=~=~=~                                                                      #
+#  * I added more audio options and updated the animations for more control.   #
+#                                                                              #
+#  v1.2                                                                        #
+# ~=~=~=~                                                                      #
+#  * I fixed the scrolling animation issue.                                    #
+#                                                                              #
+#  v1.3                                                                        #
+# ~=~=~=~                                                                      #
+#  * I added a Cursor Movement SE.                                             #
+#                                                                              #
+#  v1.4                                                                        #
+# ~=~=~=~                                                                      #
+#  * I added a "No Save Files" image set-up for the continue option when there #
+#    are no save files.                                                        #
+#                                                                              #
+#  v2.0                                                                        #
+# ~=~=~=~                                                                      #
+#  * I added a initialize option for each layer with its own set of animations.#
+#                                                                              #
+#  v2.1                                                                        #
+# ~=~=~=~                                                                      #
+#  * I fixed the bug with multiple initializing animations and added some      #
+#    starting options for each image.                                          #
+#                                                                              #
+#  v2.2                                                                        #
+# ~=~=~=~                                                                      #
+#  * I added a splash movie feature to be played before the title appears.     #
+#                                                                              #
+#  v2.3                                                                        #
+# ~=~=~=~                                                                      #
+#  * I added a few more options for each layer. They can all be found inside   #
+#    of the help guide included in the demo. I've also added another option    #
+#    for the splash movie to start after you select a new game.                #
+#                                                                              #
+#  v2.4                                                                        #
+# ~=~=~=~                                                                      #
+#  * I added a fade out animation type.                                        #
+#                                                                              #
+#  v2.5                                                                        #
+# ~=~=~=~                                                                      #
+#  * I added a min fade opacity for the fade in and out animation type.        #
+#                                                                              #
+#  v2.6                                                                        #
+# ~=~=~=~                                                                      #
+#  * I added a timer for the input triggers to stop the player from making a   #
+#    selection before you want them to.                                        #
+#                                                                              #
+#  v2.7                                                                        #
+# ~=~=~=~                                                                      #
+#  * I fixed the problem with the layers not reintializing properly.           #
+#                                                                              #
+#------------------------------------------------------------------------------#
+#==============================================================================#
+#==============================================================================
+# ** V's Custom Animated Title Scene
+#------------------------------------------------------------------------------
+#  This module manages customizable features and methods.
+#==============================================================================
+module V_Custom_Animated_Title_Scene
+  module Specs
+    Layers = {
+#<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>#
+#                                                                              #
+#                           Start Customizable Area.                           #
+#                                                                              #
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#                                                                              #
+#                      ONLY EDIT AFTER THE EQUALS SYMBOL.                      #
+#                                                                              #
+#<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>#
+
+
+
+  #=============================================================================
+  # * Layers
+  #=============================================================================
+
+
+    "Background" => { :scroll_frame_rate => 1,                               
+                      :scroll_speed => 1,                                    
+                      :x => 0,
+                      :y => 0,
+                      :ox => 0,
+                      :oy => 0,
+                      :z => 1,
+                      :opacity => 255,
+                      :animation_types => [3],
+                      },#<---- Do Not Remove
+                      
+                      "Background2" => { :scroll_frame_rate => 1,                               
+                      :scroll_speed => 1,                                    
+                      :x => -544,
+                      :y => 0,
+                      :ox => 0,
+                      :oy => 0,
+                      :z => 2,
+                      :opacity => 255,
+                      :animation_types => [3],
+                      },#<---- Do Not Remove
+
+    "Title" => {      :x => 0,
+                      :y => 0,
+                      :ox => 0,
+                      :oy => 0,
+                      :z => 3,
+                      :opacity => 255,
+                      :animation_types => [0],
+                      },#<---- Do Not Remove
+
+    }#<---- End of Layers Hash. Do Not Remove
+
+    
+  #=============================================================================
+  # * Splash Movie Options
+  #=============================================================================
+    Play_Splash_Movie = false
+    Play_On_New_Game = false
+    Movie_Name = "Flow_Animation"
+  
+    
+  #=============================================================================
+  # * Audio
+  #=============================================================================
+    BGM =         ["Take My Hand", 90, 90]
+    BGS =         ["", 40, 80]
+    New_Game_SE = ["Load", 70, 80]
+    Continue_SE = ["Load", 70, 80]
+    Shutdown_SE = ["Load", 70, 80]
+    Cancel_SE =   ["Load", 70, 80]
+    Buzzer_SE =   ["Buzzer1", 70, 80]
+    Cursor_SE =   ["Cursor1", 70, 80]
+  
+    
+  #=============================================================================
+  # * Fade Out Of Menu Time In Frames (60 frames = 1 second) 
+  #=============================================================================
+    Fade_Speed = 25
+
+    
+  #=============================================================================
+  # * Title Command Window
+  #=============================================================================
+    #------------------------------------------------------------------------
+    # * Command Window Activate Time
+    #------------------------------------------------------------------------
+    Command_Window_Activate_Time = 14
+  
+    #------------------------------------------------------------------------
+    # * Command Alignment
+    #------------------------------------------------------------------------
+    Use_Horizontal_Command_Window = false
+  
+    #------------------------------------------------------------------------
+    # * Command Window Position & Size
+    #------------------------------------------------------------------------
+    Command_Window_X = 205
+    Command_Window_Y = 300
+    Command_Window_Z = 8
+    Command_Window_Height = 90
+    Command_Window_Width = 134
+  
+    #------------------------------------------------------------------------
+    # * Command Window Opacity & Back Opacity
+    #------------------------------------------------------------------------
+    Command_Window_Opacity = 255
+    Command_Window_Back_Opacity = 255
+  
+    #------------------------------------------------------------------------
+    # * Command Text
+    #------------------------------------------------------------------------
+    Use_Text_Commands = true
+    Command_Alignment = 1                     # Left = 0 Center = 1 Right = 2
+    Command_Window_Font = "Dobkin Plain"
+    Command_Window_Text_Size = 35
+    Command_Window_Text_Color = "mp_gauge_color1"
+
+    #------------------------------------------------------------------------
+    # * Command Rect for Background
+    #------------------------------------------------------------------------
+    Command_Window_Rect_Width = 110
+    Command_Window_Rect_Height = 22
+    Command_Window_Rect_Spacing = 2
+
+    #------------------------------------------------------------------------
+    # * Command Rect for Images Cursors
+    #------------------------------------------------------------------------
+    Command_Window_Cursor_Width = 170
+    Command_Window_Cursor_Height = 40
+    Command_Window_Cursor_Spacing = 2
+
+    #------------------------------------------------------------------------
+    # * Command Images
+    #------------------------------------------------------------------------
+    NO_SAVE_FILE_IMAGE = ["No Save Files", -27, -15]
+    
+    Command_Window_Images = { #<---- Do Not Remove
+    
+      "New Game" =>  { :ox => -5,  :oy => -5              },#<---- Do Not Remove
+                     
+      "Continue" =>  { :ox => -15,  :oy => -5             },#<---- Do Not Remove
+                     
+      "Exit Demo" => { :ox => -7,  :oy => -5              },#<---- Do Not Remove
+
+      
+      
+#<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>#
+#                                                                              #
+#         DO NOT EDIT PAST THIS POINT UNLESS YOU KNOW WHAT YOUR DOING.         #
+#                                                                              #
+#<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>#
+
+
+
+
+
+
+
+
+
+
+
+
+}
+end
+end #<--- End Module===========================================================
+
+
+#==============================================================================
+# ** Sound
+#------------------------------------------------------------------------------
+#  This module plays sound effects. It obtains sound effects specified in the
+# database from the global variable $data_system, and plays them.
+#==============================================================================
+
+module Sound
+
+  #--------------------------------------------------------------------------
+  # * Include Module
+  #--------------------------------------------------------------------------
+  include V_Custom_Animated_Title_Scene::Specs
+
+  #--------------------------------------------------------------------------
+  # * Method for cursor sound
+  #--------------------------------------------------------------------------
+  def self.play_cursor
+    $title == false ? play_system_sound(0) :  RPG::SE.new(Cursor_SE[0], Cursor_SE[1], Cursor_SE[2]).play if $title != false
+  end
+  
+end #<--- End Module===========================================================
+
+
+#==============================================================================
+# ** Window_TitleCommand 
+#------------------------------------------------------------------------------
+#  This window is for selecting New Game/Continue on the title screen.
+#==============================================================================
+
+class Window_TitleCommand < Window_Command
+  
+  #----------------------------------------------------------------------------
+  # * Checks If Your Using The Title Scene
+  #----------------------------------------------------------------------------
+  if $title != false
+    
+    #--------------------------------------------------------------------------
+    # * Include Module
+    #--------------------------------------------------------------------------
+    include V_Custom_Animated_Title_Scene::Specs
+
+    #--------------------------------------------------------------------------
+    # * Update Window Position
+    #--------------------------------------------------------------------------
+    def update_placement
+      self.x = Command_Window_X
+      self.y = Command_Window_Y
+      self.z = Command_Window_Z
+      self.opacity = Command_Window_Opacity
+      self.back_opacity = Command_Window_Back_Opacity
+    end
+    
+    #--------------------------------------------------------------------------
+    # * Variable Initialization
+    #--------------------------------------------------------------------------
+    def init_vars
+      @command = {}
+    end
+      
+    #--------------------------------------------------------------------------
+    # * Processing When OK Button Is Pressed
+    #--------------------------------------------------------------------------
+    def process_ok
+      if current_item_enabled?
+        case @index
+        when 0
+          RPG::SE.new(New_Game_SE[0], New_Game_SE[1], New_Game_SE[2]).play
+        when 1
+          RPG::SE.new(Continue_SE[0], Continue_SE[1], Continue_SE[2]).play
+        when 2
+          RPG::SE.new(Shutdown_SE[0], Shutdown_SE[1], Shutdown_SE[2]).play
+        end
+        Input.update
+        deactivate
+        call_ok_handler
+      else
+        RPG::SE.new(Buzzer_SE[0], Buzzer_SE[1], Buzzer_SE[2]).play
+      end
+    end
+    
+    #--------------------------------------------------------------------------
+    # * Processing When Cancel Button Is Pressed
+    #--------------------------------------------------------------------------
+    def process_cancel
+      RPG::SE.new(Cancel_SE[0], Cancel_SE[1], Cancel_SE[2]).play
+      Input.update
+      deactivate
+      call_cancel_handler
+    end
+    
+    #----------------------------------------------------------------------------
+    # * Use Horizontal Command Window 
+    #----------------------------------------------------------------------------
+    if Use_Horizontal_Command_Window
+      
+      #--------------------------------------------------------------------------
+      # * Maximum number of colums
+      #--------------------------------------------------------------------------
+      def col_max
+        return item_max
+      end
+      
+      #--------------------------------------------------------------------------
+      # * Visible line number 
+      #--------------------------------------------------------------------------
+      def visible_line_number
+        1
+      end
+      
+    end #<---End Horizontal Check
+      
+    
+    #--------------------------------------------------------------------------
+    # * Window Height
+    #--------------------------------------------------------------------------
+    def window_height
+      return Command_Window_Height
+    end
+      
+    #--------------------------------------------------------------------------
+    # * Window Height
+    #--------------------------------------------------------------------------
+    def window_width
+      return Command_Window_Width
+    end
+      
+    #--------------------------------------------------------------------------
+    # * Draw Item
+    #--------------------------------------------------------------------------
+    def set_text_color
+      case Command_Window_Text_Color
+      when "normal_color"
+        normal_color
+      when "system_color"
+        system_color
+      when "crisis_color"
+        crisis_color
+      when "knockout_color"
+        knockout_color
+      when "gauge_back_color"
+        gauge_back_color
+      when "power_up_color"
+        power_up_color
+      when "power_down_color"
+        power_down_color
+      when "hp_gauge_color1"
+        hp_gauge_color1
+      when "mp_gauge_color2"
+        hp_gauge_color2
+      when "mp_gauge_color1"
+        mp_gauge_color1
+      when "mp_gauge_color2"
+        mp_gauge_color2
+      when "mp_cost_color"
+        mp_cost_color
+      when "tp_gauge_color1"
+        tp_gauge_color1
+      when "tp_gauge_color2"
+        tp_gauge_color2
+      when "tp_cost_color"
+        tp_cost_color
+      end
+    end
+
+    #--------------------------------------------------------------------------
+    # * Get Item Width
+    #--------------------------------------------------------------------------
+    def item_width
+      Command_Window_Rect_Width
+    end
+
+    #--------------------------------------------------------------------------
+    # * Get Item Height
+    #--------------------------------------------------------------------------
+    def item_height
+      Command_Window_Rect_Height
+    end
+    
+    #--------------------------------------------------------------------------
+    # * Get Spacing for Items Arranged Side by Side
+    #--------------------------------------------------------------------------
+    def spacing
+      return Command_Window_Rect_Spacing
+    end
+    
+    #--------------------------------------------------------------------------
+    # * Draw Command Text
+    #--------------------------------------------------------------------------
+    def draw_command_text(index, text)
+      reset_font_settings
+      contents.font.name = Command_Window_Font
+      contents.font.size = Command_Window_Text_Size
+      change_color(set_text_color, command_enabled?(index))
+      contents.draw_text(item_rect(index), text, Command_Alignment)
+      reset_font_settings
+    end
+
+    #--------------------------------------------------------------------------
+    # * Draw Command Image
+    #--------------------------------------------------------------------------
+    def draw_command_images
+      init_vars
+      index = 0
+      width = Command_Window_Rect_Width + spacing
+      height = Command_Window_Rect_Height + spacing
+      Command_Window_Images.each_key { |i| 
+        @command[i] = Sprite.new
+        if index != 1 
+          @command[i].bitmap = Cache.title1(i)
+          @command[i].ox = Command_Window_Images[i][:ox]
+          @command[i].oy = Command_Window_Images[i][:oy]
+        else
+          if continue_enabled
+            @command[i].bitmap = Cache.title1(i) 
+            @command[i].ox = Command_Window_Images[i][:ox]
+            @command[i].oy = Command_Window_Images[i][:oy]
+          else
+            @command[i].bitmap = Cache.title1(NO_SAVE_FILE_IMAGE[0])
+            @command[i].ox = NO_SAVE_FILE_IMAGE[1]
+            @command[i].oy = NO_SAVE_FILE_IMAGE[2]
+          end
+        end
+        case Use_Horizontal_Command_Window
+        when true
+          @command[i].x = (Command_Window_X + (width * index))
+          @command[i].y = Command_Window_Y
+        when false
+          @command[i].x = Command_Window_X
+          @command[i].y = (Command_Window_Y + (height * index))
+        end
+        @command[i].z = Command_Window_Z
+        index += 1
+      }   
+    end
+
+    #--------------------------------------------------------------------------
+    # * Draw Item
+    #--------------------------------------------------------------------------
+    def draw_item(index)
+      draw_command_text(index, command_name(index)) if Use_Text_Commands
+      draw_command_images if Use_Text_Commands == false
+    end
+
+    #--------------------------------------------------------------------------
+    # * 
+    #--------------------------------------------------------------------------
+    def dispose_item_images
+      @command.each_key { |i| 
+      @command[i].bitmap.dispose
+      @command[i].dispose
+      }
+    end
+
+    #--------------------------------------------------------------------------
+    # * Dispose
+    #--------------------------------------------------------------------------
+    def dispose
+      super
+      dispose_item_images if @command != nil
+    end
+    
+  end #<---End Title Usage Check
+  
+end #<--- End Class============================================================
+
+
+
+#==============================================================================
+# ** Scene_Title
+#------------------------------------------------------------------------------
+#  This class performs the title screen processing.
+#==============================================================================
+
+class Scene_Title < Scene_Base
+  
+  #--------------------------------------------------------------------------
+  # * Include Module
+  #--------------------------------------------------------------------------
+  include V_Custom_Animated_Title_Scene::Specs
+
+  #--------------------------------------------------------------------------
+  # * Start Processing
+  #--------------------------------------------------------------------------
+  def start
+    play_intro_movie(Movie_Name) if Play_Splash_Movie && Play_On_New_Game != true
+    create_command_window
+    init_cat_vars
+    play_title_music
+  end
+  
+  #--------------------------------------------------------------------------
+  # * Aliasing Method: Close Command Window
+  #--------------------------------------------------------------------------
+  alias :ccw546345313131 :create_command_window
+
+  #--------------------------------------------------------------------------
+  # * Create Command Window
+  #--------------------------------------------------------------------------
+  def create_command_window
+    ccw546345313131()
+    @active = true
+    Command_Window_Activate_Time > 0 ? @command_window.deactivate && @active = false : @active = true
+  end
+
+  #--------------------------------------------------------------------------
+  # * Initialization CAT Variables 
+  #--------------------------------------------------------------------------
+  def init_cat_vars
+    init_basic_vars
+    init_layer_vars
+    init_layer_info_vars
+  end
+                            
+  #--------------------------------------------------------------------------
+  # * Variable Initialization
+  #--------------------------------------------------------------------------
+  def init_basic_vars
+    @command_timer = 0
+    $title = true
+    @hour = nil
+    @minute = nil
+    @layers = {}
+    @layers_info = {}
+  end
+                            
+  #--------------------------------------------------------------------------
+  # * Variable Initialization
+  #--------------------------------------------------------------------------
+  def init_layer_vars
+    Layers.each_key { |i|
+      @layers[i] = Sprite.new
+      @layers[i].bitmap = Cache.title1(i) unless Layers[i].has_key?(:max_variable_frames)
+      @layers[i].bitmap = Cache.title1(i + "_0") if Layers[i].has_key?(:max_variable_frames)
+      @layers[i].x = Command_Window_X if Layers[i][:x] == nil
+      @layers[i].y = Command_Window_Y if Layers[i][:y] == nil
+      @layers[i].x = Layers[i][:x] unless Layers[i][:x] == nil
+      @layers[i].y = Layers[i][:y] unless Layers[i][:y] == nil
+      @layers[i].z = Layers[i][:z]
+      @layers[i].ox = Layers[i][:ox]
+      @layers[i].oy = Layers[i][:oy]
+      @layers[i].opacity = Layers[i][:opacity]
+      @layers[i].angle = Layers[i][:angle] if Layers[i].has_key?(:angle)
+      @layers[i].blend = Layers[i][:blend] if Layers[i].has_key?(:blend)
+    }
+  end
+                            
+  #--------------------------------------------------------------------------
+  # * Variable Initialization
+  #--------------------------------------------------------------------------
+  def init_layer_info_vars
+    Layers.each_key { |i|
+      @layers_info[i] = {   
+        :animation_types => Layers[i][:animation_types],
+        :rotation_frame => 0,
+        :scroll_frame => 0,
+        :fade_frame => 0,
+        :fade_out_frame => 0,
+        :fade_out_time => 0,
+        :wave_frame => 0,
+        :blend_frame => 0,
+        :variable_frame => 0,
+        :variable_id => 0,
+        :initialize_rotation_frame => 0,
+        :initialize_move_frame => 0,
+        :initialize_fade_in_frame => 0,
+        :fade_switch => true,
+        :wave_switch => true,
+        :blend_switch => true,
+        :blend_switch => true,
+        :initialize_frame => 0,
+        :initialize_switch => true,
+      }
+      @layers_info[i][:rotation_speed] = Layers[i][:rotation_speed] if Layers[i].has_key?(:rotation_speed)
+      @layers_info[i][:scroll_speed] = Layers[i][:scroll_speed] if Layers[i].has_key?(:scroll_speed)
+      @layers_info[i][:fade_speed] = Layers[i][:fade_speed] if Layers[i].has_key?(:fade_speed)
+      @layers_info[i][:rotation_frame_rate] = Layers[i][:rotation_frame_rate] if Layers[i].has_key?(:rotation_frame_rate)
+      @layers_info[i][:scroll_frame_rate] = Layers[i][:scroll_frame_rate] if Layers[i].has_key?(:scroll_frame_rate)
+      @layers_info[i][:fade_frame_rate] = Layers[i][:fade_frame_rate] if Layers[i].has_key?(:fade_frame_rate)
+      @layers_info[i][:start_fade_out] = Layers[i][:start_fade_out] if Layers[i].has_key?(:start_fade_out)
+      @layers_info[i][:fade_out_frame_rate] = Layers[i][:fade_out_frame_rate] if Layers[i].has_key?(:fade_out_frame_rate)
+      @layers_info[i][:fade_out_speed] = Layers[i][:fade_out_speed] if Layers[i].has_key?(:fade_out_speed)
+      @layers_info[i][:fade_max_opacity] = Layers[i][:fade_max_opacity] if Layers[i].has_key?(:fade_max_opacity)
+      @layers_info[i][:fade_min_opacity] = Layers[i][:fade_min_opacity] if Layers[i].has_key?(:fade_min_opacity)
+      @layers_info[i][:wave_frame_rate] = Layers[i][:wave_frame_rate] if Layers[i].has_key?(:wave_frame_rate)
+      @layers_info[i][:wave_strength] = Layers[i][:wave_strength] if Layers[i].has_key?(:wave_frame_rate)
+      @layers_info[i][:blend_frame_rate] = Layers[i][:blend_frame_rate] if Layers[i].has_key?(:blend_frame_rate)
+      @layers_info[i][:variable_frame_rate] = Layers[i][:variable_frame_rate] if Layers[i].has_key?(:variable_frame_rate)
+      @layers_info[i][:max_variable_frames] = Layers[i][:max_variable_frames] if Layers[i].has_key?(:max_variable_frames)
+      @layers_info[i][:variable_frame_name] = (i + "_" + @layers_info[i][:variable_id].to_s) if Layers[i].has_key?(:max_variable_frames)
+      @layers_info[i][:initialize_time] = Layers[i][:initialize_time] if Layers[i].has_key?(:initialize_time)
+      @layers_info[i][:initialize_time] = 0 if Layers[i].has_key?(:initialize_time) == false
+      @layers_info[i][:initialize_animations] = Layers[i][:initialize_animations].dup if Layers[i].has_key?(:initialize_animations)
+      @layers_info[i][:initialize_animations] = [0] if Layers[i].has_key?(:initialize_animations) == false
+      @layers_info[i][:initialize_rotation_frame_rate] = Layers[i][:initialize_rotation_frame_rate] if Layers[i].has_key?(:initialize_rotation_frame_rate)
+      @layers_info[i][:initialize_rotation_speed] = Layers[i][:initialize_rotation_speed] if Layers[i].has_key?(:initialize_rotation_speed)
+      @layers_info[i][:initialize_rotation_final_angle] = Layers[i][:initialize_rotation_final_angle] if Layers[i].has_key?(:initialize_rotation_final_angle)
+      @layers_info[i][:initialize_move_frame_rate] = Layers[i][:initialize_move_frame_rate] if Layers[i].has_key?(:initialize_move_frame_rate)
+      @layers_info[i][:initialize_move_speed] = Layers[i][:initialize_move_speed] if Layers[i].has_key?(:initialize_move_speed)
+      @layers_info[i][:initialize_move_final_x] = Layers[i][:initialize_move_final_x] if Layers[i].has_key?(:initialize_move_final_x)
+      @layers_info[i][:initialize_move_final_y] = Layers[i][:initialize_move_final_y] if Layers[i].has_key?(:initialize_move_final_y)
+      @layers_info[i][:initialize_fade_in_frame_rate] = Layers[i][:initialize_fade_in_frame_rate] if Layers[i].has_key?(:initialize_fade_in_frame_rate)
+      @layers_info[i][:initialize_fade_in_speed] = Layers[i][:initialize_fade_in_speed] if Layers[i].has_key?(:initialize_fade_in_speed)
+    }
+  end
+                            
+  #--------------------------------------------------------------------------
+  # * Get Transition Speed
+  #--------------------------------------------------------------------------
+  def transition_speed
+    return Fade_Speed
+  end
+  
+  #--------------------------------------------------------------------------
+  # * Termination Processing
+  #--------------------------------------------------------------------------
+  def terminate
+    Graphics.freeze
+    dispose_all_windows
+    SceneManager.snapshot_for_background
+    dispose_cat_layers
+    dispose_cat_layers_info
+  end
+  
+  #--------------------------------------------------------------------------
+  # * Free Foreground
+  #--------------------------------------------------------------------------
+  def dispose_cat_layers_info
+    @layers_info.clear
+  end
+  
+  #--------------------------------------------------------------------------
+  # * Dipose Layers
+  #--------------------------------------------------------------------------
+  def dispose_cat_layers
+    @layers.each_key { |i|
+      @layers[i].bitmap.dispose
+      @layers[i].dispose
+    }
+    @layers.clear
+  end
+  
+  #--------------------------------------------------------------------------
+  # * Method for Animating Layers
+  #--------------------------------------------------------------------------
+  def update_layer_frames
+    @command_timer += 1
+    @layers_info.each_key { |i|
+                            @layers_info[i][:rotation_frame] += 1 if @layers_info[i].has_key?(:rotation_frame)
+                            @layers_info[i][:scroll_frame] += 1 if @layers_info[i].has_key?(:scroll_frame)
+                            @layers_info[i][:fade_frame] += 1 if @layers_info[i].has_key?(:fade_frame)
+                            @layers_info[i][:fade_out_frame] += 1 if @layers_info[i].has_key?(:fade_out_frame)
+                            @layers_info[i][:fade_out_time] += 1 if @layers_info[i].has_key?(:fade_out_time)
+                            @layers_info[i][:wave_frame] += 1 if @layers_info[i].has_key?(:wave_frame)
+                            @layers_info[i][:blend_frame] += 1 if @layers_info[i].has_key?(:blend_frame)
+                            @layers_info[i][:variable_frame] += 1 if @layers_info[i].has_key?(:variable_frame)
+                            @layers_info[i][:initialize_frame] += 1 if @layers_info[i].has_key?(:initialize_frame)
+                            @layers_info[i][:initialize_fade_in_frame] += 1 if @layers_info[i].has_key?(:initialize_fade_in_frame)
+                            @layers_info[i][:initialize_move_frame] += 1 if @layers_info[i].has_key?(:initialize_move_frame)
+                            @layers_info[i][:initialize_rotation_frame] += 1 if @layers_info[i].has_key?(:initialize_rotation_frame)
+                          }
+  end
+  
+  #--------------------------------------------------------------------------
+  # * Process Layers
+  #--------------------------------------------------------------------------
+  def process_layer_animations
+    @layers_info.each_key { |i|
+      if @layers_info[i][:initialize_frame] >= @layers_info[i][:initialize_time]
+        case @layers_info[i][:initialize_switch]
+        when true
+          update_initialize_layer_animations
+        when false
+          update_layer_animations
+        end
+      end
+    }
+  end
+  
+  #--------------------------------------------------------------------------
+  # * Update Layers
+  #--------------------------------------------------------------------------
+  def update_initialize_layer_animations
+    @layers_info.each_key { |i|
+      @layers_info[i][:initialize_animations].size.times { |animation_index|
+        case @layers_info[i][:initialize_animations][animation_index]
+        when 0
+          initialize_complete(i, animation_index)
+        when 1
+          move_clockwise_animation(i, animation_index)
+        when 2
+          move_counter_clockwise_animation(i, animation_index)
+        when 3
+          move_right(i, animation_index)
+        when 4
+          move_left(i, animation_index)
+        when 5
+          move_down(i, animation_index)
+        when 6
+          move_up(i, animation_index)
+        when 7
+          fade_in(i, animation_index)
+        end
+      }
+    }
+  end
+  
+  #--------------------------------------------------------------------------
+  # * Update Layers
+  #--------------------------------------------------------------------------
+  def update_layer_animations
+    @layers_info.each_key { |i|
+      @layers_info[i][:animation_types].size.times { |types|
+        case @layers_info[i][:animation_types][types]
+        when 0
+        when 1
+          clockwise_animation(i)
+        when 2
+          counter_clockwise_animation(i)
+        when 3
+          loop_right(i)
+        when 4
+          loop_left(i)
+        when 5
+          loop_down(i)
+        when 6
+          loop_up(i)
+        when 7
+          fade_in_out(i)
+        when 8
+          hour(i)
+        when 9
+          minute(i)
+        when 10
+          wave(i)
+        when 11
+          blend(i)
+        when 12
+          variable(i)
+        when 13
+          cursor(i)
+        when 14
+          fade_out(i)
+        end
+      }
+    }
+  end
+  
+  #--------------------------------------------------------------------------
+  # * Cursor Animation
+  #--------------------------------------------------------------------------
+  def cursor(index)
+    cursor_index = @command_window.index
+    width = (Command_Window_Cursor_Width + Command_Window_Cursor_Spacing)
+    height = (Command_Window_Cursor_Height + Command_Window_Cursor_Spacing)
+    if Use_Horizontal_Command_Window
+      case cursor_index
+      when 0
+        @layers[index].x = Command_Window_X
+      when 1
+        @layers[index].x = Command_Window_X + width
+      when 2
+        @layers[index].x = Command_Window_X + (width * 2)
+      end
+    else
+      case cursor_index
+      when 0
+        @layers[index].y = Command_Window_Y
+      when 1
+        @layers[index].x = Command_Window_Y + height
+      when 2
+        @layers[index].x = Command_Window_Y + (height * 2)
+      end
+    end
+  end
+  
+  #--------------------------------------------------------------------------
+  # * Variable Animation
+  #--------------------------------------------------------------------------
+  def variable(index)
+    if @layers_info[index][:variable_frame] >= @layers_info[index][:variable_frame_rate]
+      case 
+      when @layers_info[index][:variable_id] >= @layers_info[index][:max_variable_frames]
+        @layers[index].bitmap.dispose
+        @layers_info[index][:variable_id] = 0
+        @layers_info[index][:variable_frame_name] = (index + "_" + @layers_info[index][:variable_id].to_s)
+        @layers[index].bitmap = Cache.title1(@layers_info[index][:variable_frame_name])
+      when @layers_info[index][:variable_id] < @layers_info[index][:max_variable_frames]
+        @layers[index].bitmap.dispose
+        @layers_info[index][:variable_id] += 1
+        @layers_info[index][:variable_frame_name] = (index + "_" + @layers_info[index][:variable_id].to_s)
+        @layers[index].bitmap = Cache.title1(@layers_info[index][:variable_frame_name])
+      end
+      @layers_info[index][:variable_frame] = 0
+    end
+  end
+  
+  #--------------------------------------------------------------------------
+  # * Blend Animation
+  #--------------------------------------------------------------------------
+  def blend(index)
+    if @layers_info[index][:blend_frame] >= @layers_info[index][:blend_frame_rate]
+      case
+      when @layers_info[index][:blend_switch] == true
+        @layers[index].blend_type += 1
+        @layers_info[index][:blend_switch]= false if @layers[index].blend_type >= 2
+      when @layers_info[index][:blend_switch] == false
+        @layers[index].blend_type -= 1 
+        @layers_info[index][:blend_switch] = true if @layers[index].blend_type <= 0
+      end
+      @layers_info[index][:blend_frame] = 0
+    end
+  end
+  
+  #--------------------------------------------------------------------------
+  # * Wave Animation
+  #--------------------------------------------------------------------------
+  def wave(index)
+    if @layers_info[index][:wave_frame] >= @layers_info[index][:wave_frame_rate]
+      case
+      when @layers_info[index][:wave_switch] == true
+        @layers[index].wave_amp += 1
+        @layers_info[index][:wave_switch]= false if @layers[index].wave_amp >= @layers_info[index][:wave_strength]
+      when @layers_info[index][:wave_switch] == false
+        @layers[index].wave_amp -= 1 
+        @layers_info[index][:wave_switch] = true if @layers[index].wave_amp <= 0
+      end
+      @layers_info[index][:wave_frame] = 0
+    end
+  end
+  
+  #--------------------------------------------------------------------------
+  # * Hour Animation
+  #--------------------------------------------------------------------------
+  def hour(index)
+    time = Time.now
+    hour = time.hour
+    if hour > 12
+      hour -= 12 
+    end
+    if @hour != hour
+      @layers[index].angle = (30 * hour) * -1 
+      @hour = hour
+    end
+  end
+  
+  #--------------------------------------------------------------------------
+  # * Minute Animation
+  #--------------------------------------------------------------------------
+  def minute(index)
+    time = Time.now
+    minute = time.min
+    if @minute != minute
+      @layers[index].angle = (6 * minute) * -1
+      @minute = minute
+    end
+  end
+  
+  #--------------------------------------------------------------------------
+  # * Clockwise Animation
+  #--------------------------------------------------------------------------
+  def clockwise_animation(index)
+    if @layers_info[index][:rotation_frame] >= @layers_info[index][:rotation_frame_rate]
+      @layers[index].angle -= @layers_info[index][:rotation_speed]
+      @layers_info[index][:rotation_frame] = 0
+    end
+  end
+  
+  #--------------------------------------------------------------------------
+  # * Counter Clockwise Animation
+  #--------------------------------------------------------------------------
+  def counter_clockwise_animation(index)
+    if @layers_info[index][:rotation_frame] <= @layers_info[index][:rotation_frame_rate]
+      @layers[index].angle += @layers_info[index][:rotation_speed]
+      @layers_info[index][:rotation_frame] = 0
+    end
+  end
+  
+  #--------------------------------------------------------------------------
+  # * Loop Moving Down
+  #--------------------------------------------------------------------------
+  def loop_down(index)
+    if @layers_info[index][:scroll_frame] >= @layers_info[index][:scroll_frame_rate]
+      @layers[index].y += @layers_info[index][:scroll_speed]
+      if @layers[index].y >= Graphics.height
+        @layers[index].y = Graphics.height - ((@layers[index].height * 2 ) + 5)
+      end
+      @layers_info[index][:scroll_frame] = 0
+    end
+  end
+  
+  #--------------------------------------------------------------------------
+  # * Loop Moving Up
+  #--------------------------------------------------------------------------
+  def loop_up(index)
+    if @layers_info[index][:scroll_frame] >= @layers_info[index][:scroll_frame_rate]
+      @layers[index].y -= @layers_info[index][:scroll_speed]
+      if @layers[index].y <= Graphics.height * -1
+        @layers[index].y = Graphics.height
+      end
+      @layers_info[index][:scroll_frame] = 0
+    end
+  end
+  
+  #--------------------------------------------------------------------------
+  # * Loop Moving Right
+  #--------------------------------------------------------------------------
+  def loop_right(index)
+    if @layers_info[index][:scroll_frame] >= @layers_info[index][:scroll_frame_rate]
+      @layers[index].x += @layers_info[index][:scroll_speed]
+      if @layers[index].x >= Graphics.width
+        @layers[index].x = Graphics.width - (@layers[index].width * 2)
+      end
+      @layers_info[index][:scroll_frame] = 0
+    end
+  end
+  
+  #--------------------------------------------------------------------------
+  # * Loop Moving Left
+  #--------------------------------------------------------------------------
+  def loop_left(index)
+    if @layers_info[index][:scroll_frame] >= @layers_info[index][:scroll_frame_rate]
+      @layers[index].x -= @layers_info[index][:scroll_speed]
+      if @layers[index].x <= @layers[index].width * -1
+        @layers[index].x = Graphics.width
+      end
+      @layers_info[index][:scroll_frame] = 0
+    end
+  end
+  
+  #--------------------------------------------------------------------------
+  # * Fade In And Out
+  #--------------------------------------------------------------------------
+  def fade_in_out(index)
+    if @layers_info[index][:fade_frame] >= @layers_info[index][:fade_frame_rate]
+      case
+      when @layers_info[index][:fade_switch] == true
+        @layers[index].opacity -= @layers_info[index][:fade_speed]
+        if @layers_info[index].has_key?(:fade_min_opacity)
+          @layers_info[index][:fade_switch]= false if @layers[index].opacity <= @layers_info[index][:fade_min_opacity]
+        else
+          @layers_info[index][:fade_switch]= false if @layers[index].opacity <= 25
+        end
+      when @layers_info[index][:fade_switch] == false
+        @layers[index].opacity += @layers_info[index][:fade_speed] 
+        case @layers_info[index].has_key?(:fade_max_opacity)
+        when true
+          @layers_info[index][:fade_switch] = true if @layers[index].opacity >= @layers[index][:fade_max_opacity]
+        when false
+          @layers_info[index][:fade_switch] = true if @layers[index].opacity >= 255
+        end
+      end
+      @layers_info[index][:fade_frame] = 0
+    end
+  end
+  
+  #--------------------------------------------------------------------------
+  # * Initialize Animation Method: Initialize Complete
+  #--------------------------------------------------------------------------
+  def initialize_complete(index, animation_index)
+    @layers_info[index][:initialize_animations][animation_index] = 0
+    initialize_completed(index)
+  end
+  
+  #--------------------------------------------------------------------------
+  # * Initialize Animation Method: Initialize Completed
+  #--------------------------------------------------------------------------
+  def initialize_completed(index)
+    completed = true
+    @layers_info[index][:initialize_animations].size.times { |i|
+      completed = false if @layers_info[index][:initialize_animations][i] != 0
+    }
+    @layers_info[index][:initialize_switch] = false if completed == true
+  end
+  
+  #--------------------------------------------------------------------------
+  # * Fade Out
+  #--------------------------------------------------------------------------
+  def fade_out(index)
+    case
+    when @layers_info[index][:fade_out_time] >= @layers_info[index][:start_fade_out]
+      if @layers_info[index][:fade_out_frame] >= @layers_info[index][:fade_out_frame_rate]
+        case 
+        when @layers[index].opacity > 0
+          @layers[index].opacity -= @layers_info[index][:fade_out_speed]
+        end
+      @layers_info[index][:fade_out_frame] = 0
+      end
+    end
+  end
+  
+  #--------------------------------------------------------------------------
+  # * Initialize Animation Method: Fade In
+  #--------------------------------------------------------------------------
+  def fade_in(index, animation_index)
+    if @layers_info[index][:initialize_fade_in_frame] >= @layers_info[index][:initialize_fade_in_frame_rate]
+      case @layers_info[index].has_key?(:fade_max_opacity)
+      when true
+        if @layers[index].opacity < @layers_info[index][:fade_max_opacity]
+          @layers[index].opacity += @layers_info[index][:initialize_fade_in_speed]
+        end
+        if @layers[index].opacity >= @layers_info[index][:fade_max_opacity]
+          initialize_complete(index, animation_index)
+        end
+      when false
+        if @layers[index].opacity < 255
+          @layers[index].opacity += @layers_info[index][:initialize_fade_in_speed]
+        end
+        if @layers[index].opacity >= 255
+          initialize_complete(index, animation_index)
+        end
+      end
+      @layers_info[index][:initialize_fade_in_frame] = 0
+    end
+  end
+  
+  #--------------------------------------------------------------------------
+  # * Initialize Animation Method: Move Right
+  #--------------------------------------------------------------------------
+  def move_right(index, animation_index)
+    if @layers_info[index][:initialize_move_frame] >= @layers_info[index][:initialize_move_frame_rate]
+      case
+      when @layers[index].x < @layers_info[index][:initialize_move_final_x]
+        @layers[index].x += @layers_info[index][:initialize_move_speed]
+      when @layers[index].x >= @layers_info[index][:initialize_move_final_x]
+        initialize_complete(index, animation_index)
+      end
+      @layers_info[index][:initialize_move_frame] = 0
+    end
+  end
+  
+  #--------------------------------------------------------------------------
+  # * Initialize Animation Method: Move Left
+  #--------------------------------------------------------------------------
+  def move_left(index, animation_index)
+    if @layers_info[index][:initialize_move_frame] >= @layers_info[index][:initialize_move_frame_rate]
+      case
+      when @layers[index].x > @layers_info[index][:initialize_move_final_x]
+        @layers[index].x -= @layers_info[index][:initialize_move_speed]
+      when @layers[index].x <= @layers_info[index][:initialize_move_final_x]
+        initialize_complete(index, animation_index)
+      end
+      @layers_info[index][:initialize_move_frame] = 0
+    end
+  end
+  
+  #--------------------------------------------------------------------------
+  # * Initialize Animation Method: Move Up
+  #--------------------------------------------------------------------------
+  def move_up(index, animation_index)
+    if @layers_info[index][:initialize_move_frame] >= @layers_info[index][:initialize_move_frame_rate]
+      case
+      when @layers[index].y > @layers_info[index][:initialize_move_final_y]
+        @layers[index].y -= @layers_info[index][:initialize_move_speed]
+      when @layers[index].y <= @layers_info[index][:initialize_move_final_y]
+        initialize_complete(index, animation_index)
+      end
+      @layers_info[index][:initialize_move_frame] = 0
+    end
+  end
+  
+  #--------------------------------------------------------------------------
+  # * Initialize Animation Method: Move Down
+  #--------------------------------------------------------------------------
+  def move_down(index, animation_index)
+    if @layers_info[index][:initialize_move_frame] >= @layers_info[index][:initialize_move_frame_rate]
+      case
+      when @layers[index].y < @layers_info[index][:initialize_move_final_y]
+        @layers[index].y += @layers_info[index][:initialize_move_speed]
+      when @layers[index].y >= @layers_info[index][:initialize_move_final_y]
+        initialize_complete(index, animation_index)
+      end
+      @layers_info[index][:initialize_move_frame] = 0
+    end
+  end
+  
+  #--------------------------------------------------------------------------
+  # * Initialize Animation Method: Move Clockwise Rotation
+  #--------------------------------------------------------------------------
+  def move_clockwise_animation(index, animation_index)
+    if @layers_info[index][:initialize_rotation_frame] >= @layers_info[index][:initialize_rotation_frame_rate]
+      case
+      when @layers[index].angle > @layers_info[index][:initialize_rotation_final_angle]
+        @layers[index].angle -= @layers_info[index][:initialize_rotation_speed]
+      when @layers[index].angle == @layers_info[index][:initialize_rotation_final_angle]
+        initialize_complete(index, animation_index)
+      end
+      @layers_info[index][:initialize_rotation_frame] = 0
+    end
+  end
+  
+  #--------------------------------------------------------------------------
+  # * Initialize Animation Method: Move Counter-clockwise Rotation
+  #--------------------------------------------------------------------------
+  def move_counter_clockwise_animation(index, animation_index)
+    if @layers_info[index][:initialize_rotation_frame] >= @layers_info[index][:initialize_rotation_frame_rate]
+      case
+      when @layers[index].angle < @layers_info[index][:initialize_rotation_final_angle]
+        @layers[index].angle += @layers_info[index][:initialize_rotation_speed]
+      when @layers[index].angle >= @layers_info[index][:initialize_rotation_final_angle]
+        initialize_complete(index, animation_index)
+      end
+      @layers_info[index][:initialize_rotation_frame] = 0
+    end
+  end
+  
+  #--------------------------------------------------------------------------
+  # * Method for Animating Layers
+  #--------------------------------------------------------------------------
+  def animate_layers
+    update_layer_frames
+    process_layer_animations
+  end
+  
+  #--------------------------------------------------------------------------
+  # * Play Intro Movie
+  #--------------------------------------------------------------------------
+  def play_intro_movie(movie_name)
+    Graphics.play_movie('Movies/' + movie_name) unless movie_name.empty?
+  end
+  
+  #--------------------------------------------------------------------------
+  # * Play Title Screen Music
+  #--------------------------------------------------------------------------
+  def play_title_music
+    play_title_background_music(BGM[0], BGM[1], BGM[2])
+    play_title_background_se(BGS[0], BGS[1], BGS[2])
+  end
+  
+  #--------------------------------------------------------------------------
+  # * Play Title Screen Music
+  #--------------------------------------------------------------------------
+  def play_title_background_music(bgm, volume, pitch)
+    RPG::BGM.new(bgm, volume, pitch).play
+  end
+  
+  #--------------------------------------------------------------------------
+  # * Play Title Screen Music
+  #--------------------------------------------------------------------------
+  def play_title_background_se(se, volume, pitch)
+    RPG::BGS.new(se, volume, pitch).play
+  end
+  
+  #--------------------------------------------------------------------------
+  # * [New Game] Command
+  #--------------------------------------------------------------------------
+  def command_new_game
+    DataManager.setup_new_game
+    close_command_window
+    fadeout_all
+    play_intro_movie(Movie_Name) if Play_Splash_Movie && Play_On_New_Game
+    $game_map.autoplay
+    SceneManager.goto(Scene_Map)
+  end 
+
+  #--------------------------------------------------------------------------
+  # * Command Update
+  #--------------------------------------------------------------------------
+  def command_update
+    if @command_timer >= Command_Window_Activate_Time
+      @command_window.activate
+      @active = true
+    end
+  end 
+
+  #--------------------------------------------------------------------------
+  # * Aliasing Method: Update Processing
+  #--------------------------------------------------------------------------
+  alias :u546131651321 :update
+
+  #--------------------------------------------------------------------------
+  # * Update Processing
+  #--------------------------------------------------------------------------
+  def update
+    command_update if Command_Window_Activate_Time > 0 && @active == false
+    animate_layers if @layers 
+    u546131651321()
+  end
+
+  #--------------------------------------------------------------------------
+  # * Aliasing Method: Close Command Window
+  #--------------------------------------------------------------------------
+  alias :clcw546345313131 :close_command_window
+
+  #--------------------------------------------------------------------------
+  # * Close Command Window
+  #--------------------------------------------------------------------------
+  def close_command_window
+    clcw546345313131()
+    $title = false
+  end
+  
+end #<--- End Class============================================================
