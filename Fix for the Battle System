@@ -1,0 +1,37 @@
+class Window_ActorCommand
+ 
+  # --------------------------------------------------------------------------
+  # Delete Handling
+  # --------------------------------------------------------------------------
+  def process_dir6
+  end
+ 
+  def process_dir4
+  end
+ 
+end
+
+class Scene_Battle
+  # --------------------------------------------------------------------------
+  # Overwrites
+  # --------------------------------------------------------------------------
+  def create_actor_command_window
+    scene_battle_create_actor_command_window_abe
+  end
+end
+#===============================================================================
+#class Scene_Battle
+#  def start_party_command_selection
+#    unless scene_changing?
+#      refresh_status
+#      @status_window.unselect
+#       @status_window.open
+#      if BattleManager.input_start
+#        next_command
+#      else
+#        @party_command_window.deactivate
+#        turn_start
+#      end
+#    end
+#  end
+#end
