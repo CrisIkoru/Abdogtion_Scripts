@@ -1,0 +1,147 @@
+########################
+### Automatic States ###
+########################
+###   by Ninjamida   ###
+########################
+
+### This script lets you assign states that are permanent and
+### cannot be removed (except by Death, but they will return
+### on revival), similar to Auto-Haste, Auto-Regen etc. These
+### can be linked to a character, a class, an equipment, or
+### another state.
+
+#############
+### Setup ###
+#############
+
+### This is plug-and-play with default or Yanfly systems. For
+### any other system, it should work functionally but may have
+### graphical glitches at the start of battle (specifically, the
+### state icon may not show up until the target is attacked once).
+
+#####################
+### Configuration ###
+#####################
+
+### To add an auto-state to an actor, class, weapon, armor or
+### state, add the following notetag:
+
+### <auto state: x>
+### <auto state: x, y, z>
+
+### The state will be added at the start of battle, as well as
+### at any time the Refresh method is called for the battle (which
+### should pretty much ensure the state will always be present).
+### Additionally, removal of the state by items/skills/etc is
+### prevented, although it will still be removed by any direct
+### call to remove_state (such as on death) - however, this won't
+### last long unless the battler is under death. This will NOT
+### override State Resist. Should the battler's state or equipment
+### change, and the state no longer be Auto for them, it will be
+### removed next time their Refresh method is called.
+
+class RPG::BaseItem
+ 
+  def auto_states
+    if @auto_states.nil?
+	  @auto_states = []
+	  if @note =~ /<auto state:[ ](.*)>/i
+	    for x in $1.split(",")
+		  @auto_states += [x.to_i]
+	    end
+	  end
+    end
+    @auto_states
+  end
+ 
+end
+
+class Game_Actor < Game_Battler
+ 
+  def auto_states
+    autostates = self.class.auto_states + actor.auto_states
+    equips.each do |eq|
+	  autostates += eq.auto_states unless eq.nil?
+    end
+    states.each do |st|
+	  autostates += st.auto_states
+    end
+    autostates = autostates.uniq
+    return autostates
+  end
+ 
+end
+
+class Game_Enemy < Game_Battler
+ 
+  alias ninjamida_auto_state_initialize initialize
+  def initialize(index, enemy_id)
+    ninjamida_auto_state_initialize(index, enemy_id)
+    add_auto_states
+  end
+ 
+  def auto_states
+    autostates = enemy.auto_states
+    states.each do |st|
+	  autostates += st.auto_states
+    end
+    autostates = autostates.uniq
+    return autostates
+  end
+
+end
+
+class Scene_Battle
+ 
+  alias ninjamida_auto_state_battle_start battle_start
+  def battle_start
+    ninjamida_auto_state_battle_start
+    $game_party.members.each do |mem|
+	  mem.add_auto_states
+	  status_redraw_target(mem) if $imported["YEA-BattleEngine"]
+    end
+  end
+
+end
+
+class Game_Battler
+ 
+  alias ninjamida_auto_states_initialize initialize
+  def initialize
+    ninjamida_auto_states_initialize
+    @old_auto_states = []
+  end
+ 
+  def add_auto_states
+    return if state?(death_state_id)
+    auto_states.each do |st|
+	  if not state?(st)
+	    add_state(st)
+	    @state_turns[st] = -1
+	  end
+    end
+  end
+ 
+  def remove_old_auto_states
+    auto_states.each do |as|
+	  @old_auto_states.delete(as)
+    end
+    @old_auto_states.each do |oas|
+	  remove_state(oas)
+    end
+    @old_auto_states = auto_states
+  end
+ 
+  alias ninjamida_auto_state_item_effect_remove_state item_effect_remove_state
+  def item_effect_remove_state(user, item, effect)
+    ninjamida_auto_state_item_effect_remove_state(user, item, effect) unless auto_states.include?(effect.data_id)
+  end
+ 
+  alias ninjamida_auto_state_refresh refresh
+  def refresh
+    ninjamida_auto_state_refresh
+    #add_auto_states
+    #remove_old_auto_states
+  end
+
+end
