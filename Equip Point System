@@ -1,0 +1,218 @@
+module Kaimonkey_equip_costs
+######################################
+#   _   __      ____  ___            _              _     
+#  | | / /     (_)  \/  |           | |            ( )    
+#  | |/ /  __ _ _| .  . | ___  _ __ | | _____ _   _|/ ___ 
+#  |    \ / _` | | |\/| |/ _ \| '_ \| |/ / _ \ | | | / __|
+#  | |\  \ (_| | | |  | | (_) | | | |   <  __/ |_| | \__ \
+#  \_| \_/\__,_|_\_|  |_/\___/|_| |_|_|\_\___|\__, | |___/
+#                                              __/ |      
+#                                             |___/       
+#   _____            _        ______     _       _        
+#  |  ___|          (_)       | ___ \   (_)     | |       
+#  | |__  __ _ _   _ _ _ __   | |_/ /__  _ _ __ | |_      
+#  |  __|/ _` | | | | | '_ \  |  __/ _ \| | '_ \| __|     
+#  | |__| (_| | |_| | | |_) | | | | (_) | | | | | |_      
+#  \____/\__, |\__,_|_| .__/  \_|  \___/|_|_| |_|\__|     
+#   _____   | |     _ | |                                 
+#  /  ___|  |_|    | ||_|                                 
+#  \ `--. _   _ ___| |_ ___ _ __ ___                      
+#   `--. \ | | / __| __/ _ \ '_ ` _ \                     
+#  /\__/ / |_| \__ \ ||  __/ | | | | |                    
+#  \____/ \__, |___/\__\___|_| |_| |_|                    
+#          __/ |                                          
+#         |___/                                           
+###############SETUP###################
+# To include an equipment cost in any piece of 
+# equipment, just put this tag in it's note box:
+# <equip_pts #>
+# with the # replace with any number
+#
+# For a piece of equipment to increase the maximum points put:
+# <extra_pts #>
+#
+###########CONFIG###################
+# Pts Vocab 
+# (singular then plural)
+@vocab = ["p","p"]
+#
+# Default cost:
+#(The formula for cost for a piece of equipment which has no cost listed in 
+# its notes. 'i' reprsents the item, 'param; is the total of all the param
+# changes for the item)
+@default_cost = "Math.sqrt(param)+1"
+# 
+# The pts formula:
+# This is the formula which is used to work out the point budget 
+# of a character. 'a' represents the character
+@budget_formula = "v[50+a.id]"
+#
+#
+# BUDGET FORMULAR EXAMPLES
+=begin
+ "10 + (a.level/3)" would mean 10 plus 1 every third level
+ "a.atk/5" would mean  that every 5 points of attack gives one equip point
+ "v[3]" would mean  the the value of variable 3
+ "a.class.id == 9 ? 15 : 10" would mean 10, unless the actor has the 9th class
+ "v[50+a.id]" would mean the value of the {50+ the actor's id} variable  
+              so thats 51 for the first actor, 52 for the second, ect.
+              This would mean you could control each actors maximum seperately
+=end
+# These can be combined into something VERY complicated eg.
+# "10 + (a.level/3) + (a.class.id == 9 ? a.atk : a.agi) + v[3]"
+# which would mean they have a point budget of
+# Ten, plus one per third level, plus their agility stat (unless they have
+# the 9th class, then its's plus their attack stat) plus the value
+# of the third variable! Go nuts! 
+# DEFAULT COST FORMULA EXAMPLE
+=begin
+ "10" would mean that all items without a cost in their notes cost 10 points
+ "param" would mean the total of all parameter changes for the item
+ "Math.sqrt(param)+1" would mean the square root of the total parameter changes,
+                      plus one. This is a good starting point for points cost, 
+                      in my opinion.
+ "i.price / 100" would mean it's price in gold, divided by one hundred
+=end
+#
+#############################
+  def self.default_cost;@default_cost;end
+  def self.vocab;@vocab;end
+      
+  def self.get_tag(item,tag,default)
+    return unless item
+    notes = item.note
+    if notes.include?("<"+tag)
+      return (notes.split("<"+tag)[1].split(">")[0]).to_i
+    else
+      return default
+    end
+  end
+  
+  def self.get_equip_pts(i)
+    param = i.params.inject{ |sum, el| sum + el }
+    begin
+      return get_tag(i,"equip_pts",eval(Kaimonkey_equip_costs.default_cost).to_i)
+    rescue 
+      msgbox "Sorry, the formula \""+@default_cost+"\" was not typed properly \n
+              Please fix it, or message Kaimonkey"
+      return 0
+    end 
+  end
+  
+  def self.get_extra_pts(item)
+    return get_tag(item,"extra_pts",0)
+  end
+  
+  def self.get_budget(a)
+    begin
+      v = $game_variables
+      return eval(@budget_formula)
+    rescue 
+      msgbox "Sorry, the formula \""+@budget_formula+"\" was not typed properly \n
+              Please fix it, or message Kaimonkey"
+      return 0
+    end  
+  end
+end
+
+class Window_EquipItem < Window_ItemList
+  def col_max
+    return 1
+  end
+  
+   alias kaimonkey_equip_draw_item_name draw_item_name
+   def draw_item_name(item, x, y, enabled = true, width = 172)
+    return unless item
+    kaimonkey_equip_draw_item_name(item,x,y,enabled,width)
+    change_color(enabled ? power_up_color : power_down_color, enabled)
+    cx = text_size(item.name).width
+    pts = Kaimonkey_equip_costs.get_equip_pts(item).to_s
+    pts += Kaimonkey_equip_costs.vocab[pts == "1" ? 0 : 1]
+    draw_text(x + 24 + cx, y, width, line_height, " ("+pts+")")
+  end
+  
+  alias kaimonkey_equip_enable enable?
+  def enable?(item)
+    #return kaimonkey_equip_enable(item) unless item
+    temp_actor = Marshal.load(Marshal.dump(@actor))
+    temp_actor.force_change_equip(@slot_id, item)
+    b = temp_actor.current_equip_pts <= temp_actor.max_equip_pts
+    return b && kaimonkey_equip_enable(item)
+  end
+end
+class Window_EquipSlot < Window_Selectable
+  
+  alias kaimonkey_equip_draw_item_name draw_item_name
+   def draw_item_name(item, x, y, enabled = true, width = 172)
+    return unless item
+    kaimonkey_equip_draw_item_name(item,x,y,enabled,width)
+    pts = Kaimonkey_equip_costs.get_equip_pts(item).to_s
+    pts += Kaimonkey_equip_costs.vocab[pts == "1" ? 0 : 1]
+    pts = " ("+pts+")"
+    cx = text_size(pts).width
+    draw_text(contents_width - cx, y, width, line_height, pts)
+  end
+end
+
+class Window_EquipStatus < Window_Base
+  #--------------------------------------------------------------------------
+  # * Get Window Width
+  #--------------------------------------------------------------------------
+  def window_width
+    return 190
+  end
+   #--------------------------------------------------------------------------
+  # * Draw Item
+  #--------------------------------------------------------------------------
+  def draw_item(x, y, param_id)
+    draw_param_name(x + 4, y, param_id)
+    draw_current_param(x + 102, y, param_id) if @actor
+    draw_right_arrow(x + 111, y)
+    draw_new_param(x + 135, y, param_id) if @temp_actor
+  end
+end
+
+class Game_Actor < Game_Battler
+  def current_equip_pts
+    sum = 0
+    for i in self.equips
+      sum += Kaimonkey_equip_costs.get_equip_pts(i) if i
+    end
+    return sum
+  end
+  def max_equip_pts
+    sum = Kaimonkey_equip_costs.get_budget(self)
+    for i in self.equips
+      sum += Kaimonkey_equip_costs.get_extra_pts(i) if i
+    end
+    return sum
+  end
+end
+
+class Window_EquipStatus < Window_Base
+  
+  alias kaimonkey_equip_draw_actor_name draw_actor_name
+  def draw_actor_name(actor, i, j) 
+    pts = actor.current_equip_pts.to_s+"/"+actor.max_equip_pts.to_s
+    pts += Kaimonkey_equip_costs.vocab[actor.max_equip_pts == 1 ? 0 : 1]
+    cx = text_size(pts).width
+    change_color(power_up_color, true)
+    draw_text(contents_width - cx, 0, width, line_height, pts) #Es esto xd
+  end
+end
+
+class Window_EquipCommand < Window_HorzCommand
+  #--------------------------------------------------------------------------
+  # * Get Digit Count
+  #--------------------------------------------------------------------------
+  def col_max
+    return 2
+  end
+  #--------------------------------------------------------------------------
+  # * Create Command List
+  #--------------------------------------------------------------------------
+  def make_command_list
+    add_command(Vocab::equip2,   :equip)
+    add_command(Vocab::clear,    :clear)
+  end
+end
