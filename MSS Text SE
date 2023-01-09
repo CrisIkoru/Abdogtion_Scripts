@@ -1,0 +1,132 @@
+################################################################################
+# Made by mobychan, slightly edited by Bird Eater.
+# Give mobychan the cookies.
+# http://forums.rpgmakerweb.com/index.php?/topic/3463-mss-text-se/
+#
+#
+# INSTRUCTIONS:
+# Place above 'Main' in the scripts section but below 'Materials'.
+# Change things in module TSE to your liking to vary the sound, pitch and volume
+# of the SE played. These correspond with the value VARIABLE 5 has. Make sure
+# variable 5 has a value between 1 and 7. HAVE FUN.
+#
+# So if variable 5 is equal to 5,
+# SE5 will be played
+# Pitch5 will be used
+# With a volume of Volume5
+################################################################################
+module TSE
+
+# The name of the file that will be played, must be placed in Audio/SE
+# CHANGE THESE TO ALTHER THE SOUND PLAYED DURING THE MESSAGE
+SE1 = "cursor1"  #NPC 
+SE2 = "voz_hiena" #Gume
+SE3 = "voz_lobo" #Rhade 
+SE4 = "voz_papa"
+SE5 = "voz_mama"
+SE6 = "voz_stella"
+SE7 = "voz_stella"
+SE8 = "voz_mama"
+
+# The pitch range of the file being played, change them however you like
+# [start_pitch, end_pitch]
+# start and end pitch can be the same to have a static pitch
+# CHANGE THESE TO ALTER THE DIFFERENT PITCHES!
+Pitch1 = [85, 100]
+Pitch2 = [85, 95]
+Pitch3 = [80, 95]
+Pitch4 = [100, 120]
+Pitch5 = [100, 120]
+Pitch6 = [90, 110]
+Pitch7 = [70, 90]
+Pitch8 = [70, 90]
+
+# The volume of the file being played
+Volume1 = 70
+Volume2 = 70
+Volume3 = 70
+Volume4 = 95
+Volume5 = 70
+Volume6 = 95
+Volume7 = 95
+Volume8 = 70
+
+# The interval at which the sound is being played, every x characters
+Interval = 5
+end
+#==============================================================================
+# ** Sound
+#==============================================================================
+module Sound
+# System Sound Effect
+def self.play_text_se
+#puts $game_variables[5]
+if $game_variables[6] == 1
+	 file = "Audio/SE/" + TSE::SE1
+	 pitch = rand(TSE::Pitch1[1] - TSE::Pitch1[0]) + TSE::Pitch1[0]
+	 Audio.se_play(file, TSE::Volume1, pitch)
+elsif $game_variables[6] == 2
+	 file = "Audio/SE/" + TSE::SE2
+	 pitch = rand(TSE::Pitch2[1] - TSE::Pitch2[0]) + TSE::Pitch2[0]
+	 Audio.se_play(file, TSE::Volume2, pitch)
+elsif $game_variables[6] == 3
+	 file = "Audio/SE/" + TSE::SE3
+	 pitch = rand(TSE::Pitch3[1] - TSE::Pitch3[0]) + TSE::Pitch3[0]
+	 Audio.se_play(file, TSE::Volume3, pitch)
+elsif $game_variables[6] == 4
+	 file = "Audio/SE/" + TSE::SE4
+	 pitch = rand(TSE::Pitch4[1] - TSE::Pitch4[0]) + TSE::Pitch4[0]
+	 Audio.se_play(file, TSE::Volume4, pitch)
+elsif $game_variables[6] == 5
+	 file = "Audio/SE/" + TSE::SE5
+	 pitch = rand(TSE::Pitch5[1] - TSE::Pitch5[0]) + TSE::Pitch5[0]
+	 Audio.se_play(file, TSE::Volume5, pitch)
+elsif $game_variables[6] == 6
+	 file = "Audio/SE/" + TSE::SE6
+	 pitch = rand(TSE::Pitch6[1] - TSE::Pitch6[0]) + TSE::Pitch6[0]
+	 Audio.se_play(file, TSE::Volume6, pitch)
+elsif $game_variables[6] == 7
+	 file = "Audio/SE/" + TSE::SE7
+	 pitch = rand(TSE::Pitch7[1] - TSE::Pitch7[0]) + TSE::Pitch7[0]
+	 Audio.se_play(file, TSE::Volume7, pitch)
+elsif $game_variables[6] == 8
+	 file = "Audio/SE/" + TSE::SE8
+	 pitch = rand(TSE::Pitch8[1] - TSE::Pitch8[0]) + TSE::Pitch8[0]
+	 Audio.se_play(file, TSE::Volume8, pitch)
+else
+	 #puts "Your variable number 9 isn't 1-7, change it!"
+end
+end
+end
+#==============================================================================
+# ** Window_Message
+#==============================================================================
+class Window_Message < Window_Base
+#--------------------------------------------------------------------------
+# * Object Initialization
+#--------------------------------------------------------------------------
+alias tse_init initialize unless $@
+def initialize
+	 tse_init
+	 @character = 0
+end
+#--------------------------------------------------------------------------
+# * Normal Character Processing
+#--------------------------------------------------------------------------
+alias tse_process_normal_character process_normal_character unless $@
+def process_normal_character(c, pos)
+	 tse_process_normal_character(c, pos)
+	 Sound.play_text_se if @character % TSE::Interval == 0 && !@line_show_fast
+	 #p @character if @character % TSE::Interval == 0 && !@line_show_fast
+	 @character += 1
+end
+alias tse_process_new_page process_new_page unless $@
+#--------------------------------------------------------------------------
+# * New Page Character Processing
+#--------------------------------------------------------------------------
+def process_new_page(text, pos)
+	 tse_process_new_page(text, pos)
+	 @character = 0
+end
+end
+
