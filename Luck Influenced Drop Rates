@@ -1,0 +1,287 @@
+#------------------------------------------------------------------------------
+#  Luck Influenced Drop Rates (ver1.0) [VXA]
+#  
+#==============================================================================
+#   About
+#------------------------------------------------------------------------------
+#   Title: Luck Infuenced Drop Rates (OvertureAce)
+#
+#   A script that allows the Luck stat to play a part in item drop rates.
+#   Two modes exist:
+#      Party Luck: The total luck of the party is used (along with a modifier)
+#                   to increase the chance of an item being dropped.
+#      Actor Luck: The Luck of the actor who lands the killing blow (along with
+#                   a modifier) will be used to increase the chance of an item
+#                   being dropped.
+#
+#   Version: 1.0
+#       # 1.0 - Initial Release
+#       
+#   Date Published: 02 February 2013
+#   Last Updated  : 02 February 2012
+#   Author: Logan Forrests
+#   Hosted on: RMRK.net only.
+#
+#   Permissions for use of this script can be found here:
+#       - http://rmrk.net/index.php/topic,45481.0.html
+#
+#   Redistribution of this script is stricly prohibited with prior permission.
+#==============================================================================
+#   Directions
+#------------------------------------------------------------------------------
+#   There are three values that are to be changed to your needs below.
+#
+#   INCREASE_PER_LUCK: Determines how much of a percentage increase each point
+#     of calculated Luck will provide. Default: 0.1% per Luck.
+#   
+#   BASED_ON_KILLER: True or False. 
+#     If true, the actor who lands the final blow on an enemy will have their 
+#      Luck stat used to determine the items that drop from that particular 
+#      enemy only.
+#     If false, the collective Luck of the battle party members will be used.
+#
+#   LUCK_MODIFIER: A value which is multiplied to the Luck value used.
+#     Default: 1.0 (Luck * 1.0; every point of Luck is used)
+#     Best lowered when using Party based Luck to reduce the potential for large
+#      drop rate increase. Eg, if combined Party Luck is 500, and the
+#      INCREASE_PER_LUCK value is 0.1, leaving the modifier to 1.0 will increase
+#      drop rate by 50%. Thus, a lower modifier will reduce this total to a
+#      more reasonable value.
+#==============================================================================
+#   Compatibiliy
+#------------------------------------------------------------------------------
+#   This script overwrites the Game_Enemy#make_drop_items method.
+#    There will likely be issues with scripts that make use of this method.
+#    Fixes will be made to accommodate the use of additional scripts. To check
+#    for the latest Compatibility Fixes, check out the support thread at 
+#    http://rmrk.net/
+#
+#   Built In Fixes
+#      Drop Options v1.1.0 by modern algebra (RMRK.net)
+#        - Place this script underneeath Drop Options v1.1.0
+#==============================================================================
+module OvertureAce
+
+  module Drop_Rate
+    
+    #The percentage increase that each point of Luck will have on drop rates
+    #   Eg. 0.1 will increase drop chance by 0.1% per Luck stat.
+    INCREASE_PER_LUCK = 0.1
+    
+    #Determines if the killer's Luck is solely used
+    # When true, only the actor who lands the killing blow will
+    #   cause an increase in drop rate
+    # When false, the combination of the party's Luck will be used.
+    BASED_ON_KILLER = false
+    
+    #Determines what amount of luck is used in drop rate increase.
+    # Eg. 1.0 will use 100% of the luck value. 0.25 will use 25% of the luck.
+    # Thus, the amount of luck used is LUCK * LUCK_MODIFIER.
+    # The final value will be rounded down to the nearest Integer.
+    LUCK_MODIFIER = 1.0
+  
+  end
+  
+end
+#==============================================================================
+#  DO NOT EDIT BELOW THIS LINE  ::::::::::::::: DO NOT EDIT BELOW THIS LINE   #
+#==============================================================================
+$imported = {} unless $imported
+$imported[:OVALuckDropRate] = true
+#==============================================================================
+# ** Game_Enemy
+#==============================================================================
+class Game_Enemy
+  #--------------------------------------------------------------------------
+  # * Make list of items that are dropped
+  #      Overwritten: changes - drop rate chance formula (creates alias for
+  #        fixes)
+  #--------------------------------------------------------------------------
+  alias_method(:ova_ldr_mdi_ge_mefu, :make_drop_items) #Preserves original
+  def make_drop_items(*args, &block)
+    enemy.drop_items.inject([]) do |r, di| 
+      if di.kind > 0 && ova_determine_drop_success(di)
+        r.push(item_object(di.kind, di.data_id))
+      else
+        r
+      end
+    end
+  end
+  #--------------------------------------------------------------------------
+  # * Determine if Item will drop
+  #      di : drop_item
+  #--------------------------------------------------------------------------
+  def ova_determine_drop_success(di)
+    rand < (1.0 / di.denominator) * drop_item_rate + ova_luck_dr_effect
+  end
+  #--------------------------------------------------------------------------
+  # * Calculate the effect of Luck stat on Drop Rate
+  #--------------------------------------------------------------------------  
+  def ova_luck_dr_effect
+    ova_luck_type_value * ova_dr_increase_per
+  end
+  #--------------------------------------------------------------------------
+  # * Determine which luck value to use (killer or party?)
+  #--------------------------------------------------------------------------
+  def ova_luck_type_value
+    if OvertureAce::Drop_Rate::BASED_ON_KILLER
+      $game_temp.ova_kill_shot_record[self].ova_drop_rate_luck
+    else #Based on party luck (includes modifier
+      $game_party.ova_drop_rate_luck
+    end
+  end
+  #--------------------------------------------------------------------------
+  # * Expresses the INCREASE_PER_LUCK as a percentage
+  #--------------------------------------------------------------------------  
+  def ova_dr_increase_per
+    OvertureAce::Drop_Rate::INCREASE_PER_LUCK / 100.0
+  end
+    
+end
+#==============================================================================
+# ** Game_Battler
+#==============================================================================
+class Game_Battler
+  #--------------------------------------------------------------------------
+  # * Calculate the drop rate luck effect of member; only for actors
+  #--------------------------------------------------------------------------
+  def ova_drop_rate_luck
+    actor? ? (luk * OvertureAce::Drop_Rate::LUCK_MODIFIER) : 0
+  end
+  #--------------------------------------------------------------------------
+  # * Execute Damage
+  #      aliased: adds - records who landed the kill shot
+  #--------------------------------------------------------------------------
+  alias_method(:ova_ldr_ed_gbat_n8y7, :execute_damage)
+  def execute_damage(user, *args, &block)
+    #run original method
+    ova_ldr_ed_gbat_n8y7(user, *args, &block)
+    #check if self.hp is <= 0, if so, set as kill blow
+    $game_temp.ova_kill_shot_record[self] = user if self.hp <= 0
+  end
+  
+end
+#==============================================================================
+# ** Game_Party
+#==============================================================================
+class Game_Party
+  #--------------------------------------------------------------------------
+  # * Calculate total luck of the party
+  #--------------------------------------------------------------------------
+  def luck
+    members.inject(0) { |r, m| r += m.luk }
+  end
+  #--------------------------------------------------------------------------
+  # * Calculates the party's total luck after modifier
+  #--------------------------------------------------------------------------
+  def ova_drop_rate_luck
+    (luck * OvertureAce::Drop_Rate::LUCK_MODIFIER).truncate
+  end
+  
+end
+#==============================================================================
+# ** Module BattleManager
+#==============================================================================
+class << BattleManager
+  #--------------------------------------------------------------------------
+  # * Setup
+  #      aliased: adds - clear_killshot_record call
+  #--------------------------------------------------------------------------  
+  alias_method(:ova_ldr_setup_batman_xs3e, :setup)
+  def setup(*args, &block)
+    #call original method
+    ova_ldr_setup_batman_xs3e(*args, &block)
+    #Esnure clear kill shot recorder in Game_Temp
+    clear_killshot_record
+  end
+  #--------------------------------------------------------------------------
+  # * Victory Processing
+  #      aliased: adds - clear_killshot_record call
+  #--------------------------------------------------------------------------
+  alias_method(:ova_ldr_procvic_batman_o94r, :process_victory)
+  def process_victory(*args, &block)
+    ova_ldr_procvic_batman_o94r(*args, &block)
+    #clear $game_temp kill shot recorder
+    clear_killshot_record
+    #return true
+    return true
+  end
+  #--------------------------------------------------------------------------
+  # * Clears the killshot record in $game_temp if $game_temp exists
+  #--------------------------------------------------------------------------
+  def clear_killshot_record
+    $game_temp.ova_ldr_killshot_clear if $game_temp
+  end
+  
+end
+#==============================================================================
+# ** Game_Temp
+#==============================================================================
+class Game_Temp
+  
+  #records the actors who landed the killing shot on each enemy
+  attr_accessor :ova_kill_shot_record
+  #--------------------------------------------------------------------------
+  # * Initialize
+  #       aliased: adds - ova_ldr_killshot_clear call
+  #--------------------------------------------------------------------------
+  alias_method(:ova_ldr_init_gtemp_aw3w, :initialize)
+  def initialize(*args, &block)
+    #create a hash to store which enemy was killed by which actor
+    ova_ldr_killshot_clear
+    #run original method
+    ova_ldr_init_gtemp_aw3w(*args, &block)
+  end
+  #--------------------------------------------------------------------------
+  # * Clears the hash: ova_kill_shot_record
+  #--------------------------------------------------------------------------
+  def ova_ldr_killshot_clear
+    @ova_kill_shot_record = {}
+  end
+  
+end
+#==============================================================================
+# Compatibility Fix: Drop Options v1.1.0 by modern algebra (rmrk.net)
+#==============================================================================
+# About
+#------------------------------------------------------------------------------
+#   Fixes:  Game_Enemy#ma_make_extra_drops
+#             - Amends the formula used to calculate drop rates to reflect
+#                the changes that Luck Drop Rates makes.
+#             - Allows Luck to influence the drop rates of extra items
+#==============================================================================
+if $imported[:MADropOptions]
+class Game_Enemy
+  #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  # * Redirect Method
+  #      redirects make_drop_items to the version created in Drop Options
+  #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  def make_drop_items(*args, &block)
+    ova_ldr_mdi_ge_mefu(*args, &block)
+  end
+  #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  # * Make Extra Drops
+  #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  def ma_make_extra_drops
+    result = []
+    enemy.ma_extra_drops.each { |di|
+      if di.kind > 0
+        bool = di.denominator.is_a?(Integer) ? ova_determine_drop_rate_success(di) : ovafix_mado_determine_percent_drop_success(di)
+        result.push(item_object(di.kind, di.data_id)) if bool
+      end
+    }
+    while result.size > enemy.ma_max_drops
+      result.delete_at(rand(result.size))
+    end
+    result
+  end
+  #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  # * Calculate the drop success based on non integer denominators
+  #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  def ovafix_mado_determine_percent_drop_success(di)
+    luck_effect = ova_luck_type_value * OvertureAce::Drop_Rate::INCREASE_PER_LUCK
+    rand(100) < (di.denominator * drop_item_rate) + luck_effect
+  end
+end
+#==============================================================================
+end #$imported
