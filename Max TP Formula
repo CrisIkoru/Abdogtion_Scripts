@@ -1,0 +1,121 @@
+=begin
+#===============================================================================
+ Title: Max TP Formula
+ Author: Hime
+ Date: Apr 14, 2015
+--------------------------------------------------------------------------------
+ ** Change log
+ Apr 14, 2015
+   - TP Rate is based on max TP and not assumed to be 100
+ Nov 5, 2013
+   - Initial release
+--------------------------------------------------------------------------------   
+ ** Terms of Use
+ * Free to use in non-commercial projects
+ * Contact me for commercial use
+ * No real support. The script is provided as-is
+ * Will do bug fixes, but no compatibility patches
+ * Features may be requested but no guarantees, especially if it is non-trivial
+ * Credits to Hime Works in your project
+ * Preserve this header
+--------------------------------------------------------------------------------
+ ** Description
+ 
+ This script allows you to set the max TP for each actor using a formula.
+ 
+ Max TP can be determined by the actor or by the class: if the actor has its
+ own max TP formula, then the class formula is ignored. However, if the actor
+ doesn't have a formula, then the class formula is used.
+ 
+--------------------------------------------------------------------------------
+ ** Installation
+ 
+ In the script editor, place this script below Materials and above Main
+
+--------------------------------------------------------------------------------
+ ** Usage 
+ 
+ Note-tag actors or classes with
+ 
+   <max tp formula: FORMULA>
+   
+ Where the formula is a valid ruby expression that evaluates to a number.
+ You can use the following variables in your formula:
+ 
+   a - current actor
+   p - game party
+   t - game troop
+   v - game variables
+   s - game switches
+  
+--------------------------------------------------------------------------------
+ ** Examples
+ 
+ Use the current battle turn count
+ 
+   t.turn_count * 10
+   
+ Actor's current level
+ 
+   a.level * 100
+   
+ Party leader's level
+ 
+   p.leader.level * 20
+
+  
+#===============================================================================
+=end
+$imported = {} if $imported.nil?
+$imported["TH_MaxTPFormula"] = true
+#===============================================================================
+# ** Rest of script
+#===============================================================================
+module TH
+  module Max_TP_Formula
+    
+
+    Regex = /<max[-_ ]tp[-_ ]formula:\s*(.*)\s*>/i
+    
+    def max_tp_formula
+      load_notetag_max_tp_formula if @max_tp_formula.nil?
+      return @max_tp_formula
+    end
+    
+    def load_notetag_max_tp_formula
+      @max_tp_formula = ""
+      if self.note =~ TH::Max_TP_Formula::Regex
+        @max_tp_formula = $1
+      end
+    end
+    
+    def eval_max_tp_formula(a, p=$game_party, t=$game_troop, v=$game_variables, s=$game_switches)
+      eval(self.max_tp_formula)
+    end
+  end
+end
+
+module RPG
+  class Class < BaseItem
+    include TH::Max_TP_Formula
+  end
+  
+  class Actor < BaseItem
+    include TH::Max_TP_Formula
+  end
+end
+
+class Game_Actor < Game_Battler
+  
+  alias :th_max_tp_formula_max_tp :max_tp
+  def max_tp
+    return self.actor.eval_max_tp_formula(self) if !self.actor.max_tp_formula.empty?
+    return self.class.eval_max_tp_formula(self) if !self.class.max_tp_formula.empty?
+    th_max_tp_formula_max_tp
+  end
+  
+  def tp_rate
+    max = max_tp
+    max > 0 ? @tp.to_f / max_tp : @tp.to_f
+  end
+end
